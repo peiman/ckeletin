@@ -1,0 +1,12 @@
+# requirements.txt
+typer>=0.3.2
+rich>=10.0.0
+pydantic-settings>=0.1
+
+# Testing
+pytest>=6.0
+pytest-mock>=3.6
+
+# Optional
+requests>=2.25
+python-dotenv>=0.15.0
