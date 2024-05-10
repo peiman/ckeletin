@@ -16,6 +16,9 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.11
+      - name: Load Environment Variables
+        run: |
+          echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
