@@ -1,12 +1,12 @@
 # config.py
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    app_name: str = "MyApp"
+    app_name: str = "My App"
     admin_email: str
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
+    # Use ConfigDict to specify a custom config file
+    model_config = ConfigDict(env_file=".env")
 
 settings = Settings()  # This line creates an instance of the Settings class

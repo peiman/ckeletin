@@ -2,10 +2,12 @@
 typer>=0.3.2
 rich>=10.0.0
 pydantic-settings>=0.1
+pydantic
 
 # Testing
 pytest>=6.0
 pytest-mock>=3.6
+pytest-cov
 
 # Optional
 requests>=2.25
