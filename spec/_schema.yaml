@@ -1,0 +1,120 @@
+# spec/_schema.yaml
+# Defines the structure of ckeletin specification requirements.
+# Each spec domain file (architecture.yaml, testing.yaml, etc.)
+# follows this format.
+#
+# This is the authoritative definition — future validation tooling
+# will be built from this file.
+
+domain:
+  description: "Top-level key in each spec file. Groups related requirements."
+  fields:
+    name:
+      type: string
+      required: true
+      description: "Human-readable domain name"
+    description:
+      type: string
+      required: true
+      description: "What this domain covers and why it matters"
+
+requirement:
+  description: "A single spec requirement within a domain."
+  fields:
+    id:
+      type: string
+      required: true
+      format: "CKSPEC-<DOMAIN>-<NNN>"
+      description: >
+        Stable identifier. Prefix indicates domain (ARCH, ENF, TEST,
+        CMD, CFG, AGENT, DOC, UPD, LIC, CI, WF). Number is sequential
+        within domain and NEVER reused — retired requirements keep
+        their number.
+      examples:
+        - "CKSPEC-ARCH-001"
+        - "CKSPEC-TEST-003"
+    title:
+      type: string
+      required: true
+      description: "Short descriptive title"
+    level:
+      type: enum
+      required: true
+      values: [MUST, SHOULD, MAY]
+      description: >
+        RFC 2119 conformance level. MUST = absolute requirement.
+        SHOULD = valid reasons to deviate exist, but implications
+        must be understood. MAY = truly optional.
+    since:
+      type: string
+      required: true
+      format: "vX.Y.Z"
+      description: "Spec version when this requirement was introduced"
+    modified:
+      type: string
+      required: false
+      format: "vX.Y.Z"
+      description: "Spec version when last changed (omit if never changed)"
+    checkable:
+      type: boolean
+      required: true
+      description: "Whether this requirement can be verified programmatically"
+    description:
+      type: string
+      required: true
+      description: >
+        What the requirement demands. Uses RFC 2119 keywords in ALL
+        CAPS. Language-agnostic — describes WHAT, never HOW.
+    rationale:
+      type: string
+      required: true
+      description: "WHY this requirement exists. Links to principles."
+    notes:
+      type: string
+      required: false
+      description: "Additional context, caveats, or implementation hints"
+
+conformance_entry:
+  description: "How an implementation reports conformance to a requirement."
+  fields:
+    status:
+      type: enum
+      required: true
+      values: [met, partial, not-met, not-applicable, deferred]
+      description: >
+        met = fully satisfied. partial = partly satisfied (notes
+        explain gap). not-met = not satisfied. not-applicable =
+        doesn't apply to this implementation. deferred = planned.
+    evidence:
+      type: string
+      required: true
+      description: "Code reference, file path, or explanation showing HOW"
+    tests:
+      type: list[string]
+      required: false
+      description: "Test names or paths that verify this requirement"
+    notes:
+      type: string
+      required: false
+      description: "Caveats, partial conformance, or feedback for spec"
+
+conformance_report:
+  description: "Top-level structure of a conformance report."
+  fields:
+    implementation:
+      type: string
+      required: true
+      description: "Name of the implementation (e.g., ckeletin-go)"
+    spec_version:
+      type: string
+      required: true
+      description: "Which spec version this report targets"
+    report_date:
+      type: string
+      required: true
+      format: "YYYY-MM-DD"
+      description: "When this report was last updated"
+    requirements:
+      type: map[requirement_id -> conformance_entry]
+      required: true
+      description: "Per-requirement conformance status"
