@@ -1,0 +1,104 @@
+# spec/testing.yaml
+# Testing requirements for ckeletin-conformant CLI projects.
+#
+# Verified against ckeletin-go reference implementation:
+#   - .ckeletin/scripts/check-coverage-project.sh (85% threshold)
+#   - .ckeletin/docs/adr/003-dependency-injection-over-mocking.md
+#   - AGENTS.md, CLAUDE.md (TDD rules, atomic commit rules)
+#   - test file analysis: 76 files use testify, 17 mention mock structs
+#     (simple DI test doubles, not mock frameworks)
+
+domain:
+  name: Testing
+  description: >
+    Testing methodology and quality enforcement for CLI projects.
+    Ensures that tests drive development, coverage remains above a
+    minimum threshold, dependencies are injected rather than mocked,
+    and test code is committed atomically with production code.
+
+requirements:
+  - id: CKSPEC-TEST-001
+    title: Test-driven development
+    level: MUST
+    since: v0.1.0
+    checkable: false
+    description: >
+      Developers MUST write a failing test before writing the
+      implementation code that makes it pass. The test MUST fail for
+      the right reason (asserting the desired behavior, not a syntax
+      error) before implementation begins. This applies to new
+      features, bug fixes, and refactors that change observable
+      behavior.
+    rationale: >
+      Truth-Seeking (Principle 1) requires that every behavior claim
+      be backed by evidence — a failing test is the first piece of
+      evidence that the requirement is real and the assertion is
+      correct. Lean Iteration (Principle 3) favors writing the
+      smallest test that proves the next behavior increment, keeping
+      the feedback loop tight.
+
+  - id: CKSPEC-TEST-002
+    title: Minimum coverage threshold
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Projects MUST enforce a minimum test coverage threshold of 85%
+      of statements, measured automatically. The coverage check MUST
+      run as part of the standard validation pipeline and MUST fail
+      the build if coverage drops below the threshold. Coverage
+      exclusions (e.g., TUI code requiring interactive testing, demo
+      code) MUST be documented and justified.
+    rationale: >
+      Automated Enforcement (Principle 2) requires that coverage
+      thresholds be machine-checked, not manually reviewed. A
+      threshold prevents silent erosion of test quality over time.
+      Documenting exclusions satisfies Truth-Seeking (Principle 1) —
+      every gap is acknowledged, not hidden.
+    notes: >
+      In ckeletin-go, check-coverage-project.sh enforces 85% with
+      exclusions for _tui.go files and /demo/ directories. The
+      threshold is configurable via MIN_COVERAGE but defaults to
+      85.0.
+
+  - id: CKSPEC-TEST-003
+    title: Dependency injection over mocking
+    level: SHOULD
+    since: v0.1.0
+    checkable: false
+    description: >
+      Tests SHOULD inject dependencies through interfaces rather than
+      using mock generation frameworks (e.g., gomock, mockery,
+      unittest.mock). Test doubles SHOULD be simple structs or
+      functions that implement the required interface. External
+      dependencies SHOULD be abstracted behind interfaces in
+      production code, making them naturally replaceable in tests
+      without framework magic.
+    rationale: >
+      Separation of Concerns (Principle 5) favors explicit dependency
+      boundaries over implicit framework interception. Lean Iteration
+      (Principle 3) prefers simple test doubles that are easy to read,
+      write, and maintain over generated mocks that add build
+      complexity and obscure test intent. Interface-based injection
+      makes the dependency graph visible, satisfying Truth-Seeking
+      (Principle 1).
+
+  - id: CKSPEC-TEST-004
+    title: Atomic test commits
+    level: MUST
+    since: v0.1.0
+    checkable: false
+    description: >
+      Tests and the implementation code they validate MUST be
+      committed together as a single atomic unit. A commit MUST NOT
+      contain tests without the code that makes them pass, nor
+      implementation code without its corresponding tests. This
+      ensures that every commit in the history is a green, bisectable
+      state.
+    rationale: >
+      Truth-Seeking (Principle 1) demands that the commit history
+      tells a truthful story — each commit represents a complete,
+      verified step. Lean Iteration (Principle 3) requires that every
+      increment is shippable. Atomic commits enable reliable git
+      bisect, meaningful code review per commit, and preservation of
+      the TDD narrative through normal merges.
