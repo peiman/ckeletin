@@ -1,83 +1,63 @@
 # ckeletin
 
-`ckeletin` is a Command Line Interface (CLI) skeleton designed for professionals looking to create production-ready python cli applications. It includes comprehensive examples and best practices to help streamline the development of robust CLI tools.
+The ckeletin specification — a versioned, language-agnostic standard
+for CLI application scaffolds.
 
-## Features
+## What This Is
 
-- **Structured Project Layout**: Organized to support larger CLI projects with multiple command groups and integration points.
-- **Environment Management**: Uses `.env` for environment variable management to keep configurations secure and separate from code.
-- **Automated Testing Setup**: Includes configurations for automated testing with examples to ensure reliability.
-- **CI/CD Ready**: Ready to integrate with GitHub Actions for continuous integration and deployment, with examples of how to handle secrets securely.
+ckeletin defines what a production-ready CLI scaffold must provide.
+Implementations in specific languages document how they meet each
+requirement.
 
-## Setup Instructions
+This is not a top-down mandate. The specification and its
+implementations learn from each other — conformance reports are
+retrospectives, not audits.
 
-- Copy `.env.template` to `.env`.
-- Replace the placeholder values in `.env` with your actual environment variables.
+## Current State (v0.1.0 — Lean Start)
 
-## How It Works
+Three core domains, verified against one implementation:
 
-`ckeletin` utilizes a series of Python scripts structured to demonstrate various CLI capabilities:
+| Domain | Requirements | What it covers |
+|--------|-------------|----------------|
+| Architecture | CKSPEC-ARCH-001 to 007 | 4-layer architecture, dependency rules |
+| Enforcement | CKSPEC-ENF-001 to 004 | Every decision must be enforced |
+| Testing | CKSPEC-TEST-001 to 004 | TDD, coverage, dependency injection |
 
-1. **Command Handling**: Shows how to define and handle different commands and subcommands using [Typer](https://typer.tiangolo.com).
-2. **Configuration Management**: Utilizes [Pydantic](https://docs.pydantic.dev/latest/) for robust configuration handling, demonstrating how to validate and manage application settings.
-3. **Logging**: Configured to use [Rich](https://rich.readthedocs.io/en/stable/logging.html) to provide detailed logs for debugging and operational monitoring.
+More domains will be added when ckeletin-rust needs them.
 
-### Running the Application
+## Implementations
 
-To run the application locally, follow these steps:
+| Implementation | Language | Conformance |
+|---------------|----------|-------------|
+| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 15/15 met |
+| ckeletin-rust | Rust | Planned |
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+## Structure
 
-# Run the CLI
-python -m mycliapp
+```
+spec/
+  _schema.yaml         — Requirement format definition
+  architecture.yaml    — 4-layer architecture
+  enforcement.yaml     — Automated enforcement
+  testing.yaml         — TDD, coverage, DI
+conformance/
+  ckeletin-go.yaml     — Go conformance report
+principles.md          — The why behind everything
 ```
 
-## Configuring CI/CD with GitHub Actions
+## Conformance Language
 
-To ensure that `ckeletin` works seamlessly in a CI/CD pipeline, follow these setup steps for GitHub Actions:
+Uses [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119)
+keywords: MUST, SHOULD, MAY. Normative only in ALL CAPS per
+[RFC 8174](https://www.rfc-editor.org/rfc/rfc8174).
 
-1. **Set up Workflow**: Define your `.github/workflows/ci.yml` with steps to install dependencies, run tests, and deploy.
-2. **Manage Secrets**:
-   - Navigate to your GitHub repository’s Settings.
-   - Click on Secrets and choose "New repository secret".
-   - Add each configuration/setting parameter that your application needs, which you've defined in your `.env` file. For example, add `ADMIN_EMAIL` as a secret with the appropriate value.
+## Feedback Cycle
 
-### Example Workflow
+Implementations open issues tagged `feedback/go` or `feedback/rust`
+to propose spec changes. The other implementation reviews before
+merge. A requirement isn't proven until two implementations can
+satisfy it.
 
-Here is a basic example of a GitHub Actions workflow setup for running tests:
+## Principles
 
-```yaml
-name: CI Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.11'
-    - name: Load Environment Variables
-      run: |
-        echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> $GITHUB_ENV
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run tests
-      run: pytest --cov=mycliapp
-```
-
-## Contributing
-
-Contributions are welcome from the community! If you'd like to contribute to `ckeletin`, please fork the repository, create a feature branch, and submit a pull request.
+See [principles.md](principles.md).

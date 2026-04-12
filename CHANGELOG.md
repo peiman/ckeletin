@@ -1,15 +1,20 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the ckeletin specification.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Format: [Keep a Changelog](https://keepachangelog.com/)
+Versioning: [Semantic Versioning](https://semver.org/)
 
-## [Unreleased]
+## [0.1.0] - 2026-04-12
 
 ### Added
+- Requirement format schema (spec/_schema.yaml)
+- Principles document (8 principles)
+- Architecture domain (CKSPEC-ARCH-001 to 007)
+- Enforcement domain (CKSPEC-ENF-001 to 004)
+- Testing domain (CKSPEC-TEST-001 to 004)
+- ckeletin-go conformance report (15 requirements verified)
 
-- Initial CLI skeleton structure
-- Environment management with .env
-- Automated testing setup
-- CI/CD configuration with GitHub Actions
+### Notes
+- Lean start: 3 core domains. More added when ckeletin-rust needs them.
+- No gate zero yet — deferred until second implementation exists.
