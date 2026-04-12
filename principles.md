@@ -66,3 +66,15 @@ top-down mandates.
 A requirement isn't proven until at least two implementations
 can satisfy it. If only one can meet it, the requirement may
 be too language-specific. If both struggle, it needs revision.
+
+### 9. Single Source of Truth
+
+Every piece of information has ONE authoritative location.
+Duplication drifts — when the same fact lives in two places,
+they inevitably diverge, and neither can be trusted. When
+you need information in a second place, reference the source
+rather than copying it. Configuration keys come from a
+registry, not hardcoded strings. Architecture descriptions
+link to decisions, not restate them. The spec defines
+requirements; conformance reports describe implementation
+details. Never both.

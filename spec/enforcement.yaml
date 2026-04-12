@@ -1,12 +1,5 @@
 # spec/enforcement.yaml
 # Enforcement requirements for ckeletin-conformant CLI projects.
-#
-# Verified against ckeletin-go reference implementation:
-#   - .ckeletin/docs/adr/014-adr-enforcement-policy.md (enforcement ladder, audit table)
-#   - 9 validate-*.sh scripts (architecture, layering, commands, config, etc.)
-#   - 16 check-*.sh scripts (coverage, secrets, SAST, deps, licenses, etc.)
-#   - 12 semgrep rules (8 security + 4 ckeletin-specific)
-#   - ADR-014 audit: 12/14 ADRs fully automated, 1 partial, 1 honor system
 
 domain:
   name: Enforcement
@@ -37,7 +30,6 @@ requirements:
       This requirement is itself not fully automatable — determining
       whether a decision CAN be automated requires human judgment.
       The enforcement audit (CKSPEC-ENF-004) makes gaps visible.
-      In ckeletin-go, 12 of 14 ADRs have full automated enforcement.
 
   - id: CKSPEC-ENF-002
     title: Enforcement ladder
@@ -59,12 +51,6 @@ requirements:
       human discipline and fails under time pressure. Lean Iteration
       (Principle 3) favors the mechanism with the shortest feedback
       loop.
-    notes: >
-      In ckeletin-go, all ladder levels are used: build tags
-      (compile-time), golangci-lint + go-arch-lint (linter), semgrep
-      (SAST), validate-*.sh scripts (validator), GitHub Actions (CI),
-      and documented honor system for ADR-007 (Bubble Tea choice).
-
   - id: CKSPEC-ENF-003
     title: Document enforcement gaps
     level: MUST
@@ -80,12 +66,6 @@ requirements:
       revisited when new tooling becomes available. Documented gaps
       are trackable and create a natural backlog for enforcement
       improvement.
-    notes: >
-      In ckeletin-go, ADR-007 (Bubble Tea UI) documents: "Honor
-      system — technology choice, low value to automate." ADR-008
-      (GoReleaser) documents: "Partial — config validation only,
-      not process."
-
   - id: CKSPEC-ENF-004
     title: Enforcement audit table
     level: MUST
@@ -105,7 +85,3 @@ requirements:
       investment in automation where it matters most. Automated
       Enforcement (Principle 2) requires knowing where automation
       is missing before it can be added.
-    notes: >
-      In ckeletin-go, ADR-014 contains the enforcement audit table
-      tracking all 14 ADRs with columns: ADR, Title, Enforcement,
-      Status, Gap.

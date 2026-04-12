@@ -1,11 +1,5 @@
 # spec/architecture.yaml
 # Architecture requirements for ckeletin-conformant CLI projects.
-#
-# Verified against ckeletin-go reference implementation:
-#   - .go-arch-lint.yml (layer definitions, dependency rules)
-#   - validate-layering.sh (go-arch-lint wrapper)
-#   - validate-package-organization.sh (file location rules)
-#   - main.go (entry point structure)
 
 domain:
   name: Architecture
@@ -74,10 +68,9 @@ requirements:
       logic. Automated Enforcement (Principle 2) requires that this
       isolation be checkable by static analysis tools.
     notes: >
-      In ckeletin-go, this is enforced by go-arch-lint: only the commands
-      component has a canUse entry for the cobra vendor. Configuration
-      libraries (e.g., Viper) are permitted in the Infrastructure layer
-      since they are infrastructure concerns, not CLI framework concerns.
+      Configuration libraries (e.g., Viper, figment) are infrastructure
+      concerns, not CLI framework concerns — they are permitted in the
+      Infrastructure layer.
 
   - id: CKSPEC-ARCH-004
     title: Business logic isolation
@@ -131,12 +124,6 @@ requirements:
       minimal code at the boundary where testing is most expensive (process
       entry). All testable logic belongs in layers that can be exercised
       without launching the full program.
-    notes: >
-      In ckeletin-go, main.go is 36 lines. The main() function calls
-      os.Exit(run()), and run() delegates to cmd.Execute() with error
-      handling. This pattern keeps main.go excluded from coverage
-      requirements while ensuring all logic is testable via run().
-
   - id: CKSPEC-ARCH-007
     title: Package location enforcement
     level: MUST
@@ -156,8 +143,5 @@ requirements:
       structure. Separation of Concerns (Principle 5) extends to the
       filesystem: each directory has a clear purpose.
     notes: >
-      In ckeletin-go, validate-package-organization.sh enforces: only
-      main.go at root, Go packages only in cmd/, internal/, pkg/, scripts/,
-      test/, or testdata/, and pkg/ packages must not import internal/.
       Language-specific implementations define their own designated
       directories appropriate to the language's conventions.

@@ -1,12 +1,5 @@
 # spec/testing.yaml
 # Testing requirements for ckeletin-conformant CLI projects.
-#
-# Verified against ckeletin-go reference implementation:
-#   - .ckeletin/scripts/check-coverage-project.sh (85% threshold)
-#   - .ckeletin/docs/adr/003-dependency-injection-over-mocking.md
-#   - AGENTS.md, CLAUDE.md (TDD rules, atomic commit rules)
-#   - test file analysis: 76 files use testify, 17 mention mock structs
-#     (simple DI test doubles, not mock frameworks)
 
 domain:
   name: Testing
@@ -55,12 +48,6 @@ requirements:
       threshold prevents silent erosion of test quality over time.
       Documenting exclusions satisfies Truth-Seeking (Principle 1) —
       every gap is acknowledged, not hidden.
-    notes: >
-      In ckeletin-go, check-coverage-project.sh enforces 85% with
-      exclusions for _tui.go files and /demo/ directories. The
-      threshold is configurable via MIN_COVERAGE but defaults to
-      85.0.
-
   - id: CKSPEC-TEST-003
     title: Dependency injection over mocking
     level: SHOULD
