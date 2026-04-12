@@ -1,0 +1,111 @@
+# spec/enforcement.yaml
+# Enforcement requirements for ckeletin-conformant CLI projects.
+#
+# Verified against ckeletin-go reference implementation:
+#   - .ckeletin/docs/adr/014-adr-enforcement-policy.md (enforcement ladder, audit table)
+#   - 9 validate-*.sh scripts (architecture, layering, commands, config, etc.)
+#   - 16 check-*.sh scripts (coverage, secrets, SAST, deps, licenses, etc.)
+#   - 12 semgrep rules (8 security + 4 ckeletin-specific)
+#   - ADR-014 audit: 12/14 ADRs fully automated, 1 partial, 1 honor system
+
+domain:
+  name: Enforcement
+  description: >
+    Every architectural decision that can be checked by a tool must be.
+    Enforcement prevents silent erosion of standards over time.
+    Undocumented gaps are invisible — documented gaps are trackable.
+
+requirements:
+  - id: CKSPEC-ENF-001
+    title: Automated enforcement required
+    level: MUST
+    since: v0.1.0
+    checkable: false
+    description: >
+      Every architectural decision that CAN be verified by a tool
+      MUST have automated enforcement. Manual review alone is
+      insufficient — tooling catches violations consistently,
+      regardless of who wrote the code or when.
+    rationale: >
+      Automated Enforcement (Principle 2) is the keystone: rules
+      without enforcement erode silently. New contributors may not
+      read every decision document. Automation ensures decisions
+      survive team changes, time pressure, and human error.
+      Truth-Seeking (Principle 1) demands that compliance be
+      verified, not assumed.
+    notes: >
+      This requirement is itself not fully automatable — determining
+      whether a decision CAN be automated requires human judgment.
+      The enforcement audit (CKSPEC-ENF-004) makes gaps visible.
+      In ckeletin-go, 12 of 14 ADRs have full automated enforcement.
+
+  - id: CKSPEC-ENF-002
+    title: Enforcement ladder
+    level: SHOULD
+    since: v0.1.0
+    checkable: false
+    description: >
+      Enforcement SHOULD use the strongest feasible mechanism. In
+      order of preference: (1) compile-time / type system,
+      (2) linter, (3) static analysis / SAST, (4) validator script,
+      (5) CI-only check, (6) honor system (last resort). Higher
+      levels catch violations earlier and cost less to maintain.
+    rationale: >
+      Automated Enforcement (Principle 2) prefers mechanisms that
+      catch violations as early as possible. Compile-time enforcement
+      is free — violations don't build. Linter enforcement catches
+      issues in the editor. Script-based checks run at commit time.
+      CI catches what slips through. Honor system relies entirely on
+      human discipline and fails under time pressure. Lean Iteration
+      (Principle 3) favors the mechanism with the shortest feedback
+      loop.
+    notes: >
+      In ckeletin-go, all ladder levels are used: build tags
+      (compile-time), golangci-lint + go-arch-lint (linter), semgrep
+      (SAST), validate-*.sh scripts (validator), GitHub Actions (CI),
+      and documented honor system for ADR-007 (Bubble Tea choice).
+
+  - id: CKSPEC-ENF-003
+    title: Document enforcement gaps
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Architectural decisions that cannot be fully automated MUST
+      explicitly document: what IS automated (and by which tool),
+      what remains honor system, and why automation is not feasible.
+    rationale: >
+      Truth-Seeking (Principle 1) requires that gaps be acknowledged,
+      not hidden. Undocumented gaps are invisible — they cannot be
+      revisited when new tooling becomes available. Documented gaps
+      are trackable and create a natural backlog for enforcement
+      improvement.
+    notes: >
+      In ckeletin-go, ADR-007 (Bubble Tea UI) documents: "Honor
+      system — technology choice, low value to automate." ADR-008
+      (GoReleaser) documents: "Partial — config validation only,
+      not process."
+
+  - id: CKSPEC-ENF-004
+    title: Enforcement audit table
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Projects MUST maintain a living enforcement audit table that
+      tracks every architectural decision, its enforcement mechanism,
+      enforcement status (full / partial / honor system), and any
+      gaps. This table is the single source of truth for enforcement
+      coverage.
+    rationale: >
+      Truth-Seeking (Principle 1) demands visibility into what is
+      enforced and what is not. An audit table makes enforcement
+      coverage visible at a glance. It reveals patterns — many
+      honor-system entries signal enforcement debt — and drives
+      investment in automation where it matters most. Automated
+      Enforcement (Principle 2) requires knowing where automation
+      is missing before it can be added.
+    notes: >
+      In ckeletin-go, ADR-014 contains the enforcement audit table
+      tracking all 14 ADRs with columns: ADR, Title, Enforcement,
+      Status, Gap.
