@@ -1,0 +1,163 @@
+# spec/architecture.yaml
+# Architecture requirements for ckeletin-conformant CLI projects.
+#
+# Verified against ckeletin-go reference implementation:
+#   - .go-arch-lint.yml (layer definitions, dependency rules)
+#   - validate-layering.sh (go-arch-lint wrapper)
+#   - validate-package-organization.sh (file location rules)
+#   - main.go (entry point structure)
+
+domain:
+  name: Architecture
+  description: >
+    Structural organization of CLI projects into layers with controlled
+    dependencies. Prevents business logic from coupling to CLI frameworks,
+    infrastructure from depending on upper layers, and source files from
+    scattering outside designated locations.
+
+requirements:
+  - id: CKSPEC-ARCH-001
+    title: Four-layer architecture
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Projects MUST organize source code into four layers: Entry, Command,
+      Business Logic, and Infrastructure. The Entry layer is the program
+      entry point. The Command layer contains CLI command definitions. The
+      Business Logic layer contains feature-specific implementations. The
+      Infrastructure layer contains shared services (configuration, logging,
+      output formatting, test utilities). An optional Public layer MAY exist
+      for standalone reusable libraries that are independent of the CLI
+      architecture.
+    rationale: >
+      Separation of Concerns (Principle 5) requires that framework code,
+      business logic, and infrastructure live in different places. Each
+      separation prevents a specific kind of drift. Platforms, Not Features
+      (Principle 4) demands that each layer is a stable platform for the
+      layers above it.
+
+  - id: CKSPEC-ARCH-002
+    title: Directed dependencies
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Dependencies MUST flow from outer layers to inner layers: Entry
+      depends on Command, Command depends on Business Logic and
+      Infrastructure, Business Logic depends on Infrastructure.
+      Dependencies MUST NOT flow in the reverse direction. Infrastructure
+      MUST NOT depend on Business Logic or Command. Business Logic MUST NOT
+      depend on Command. Infrastructure and Public packages are available as
+      common dependencies to all layers.
+    rationale: >
+      Automated Enforcement (Principle 2) requires that dependency direction
+      be machine-verifiable. Separation of Concerns (Principle 5) is
+      meaningless if layers can reach back into their callers. Directed
+      dependencies ensure that inner layers remain stable platforms
+      (Principle 4) for the layers above them.
+
+  - id: CKSPEC-ARCH-003
+    title: CLI framework isolation
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Only the Command layer MUST import the CLI framework (e.g., Cobra in
+      Go, Click in Python, clap in Rust). Business Logic and Infrastructure
+      layers MUST NOT import the CLI framework. The Entry layer MAY import
+      the Command layer but MUST NOT import the CLI framework directly.
+    rationale: >
+      Framework Independence (Principle 6) demands that business logic does
+      not depend on CLI frameworks. This ensures testability, portability,
+      and the ability to swap the CLI framework without rewriting business
+      logic. Automated Enforcement (Principle 2) requires that this
+      isolation be checkable by static analysis tools.
+    notes: >
+      In ckeletin-go, this is enforced by go-arch-lint: only the commands
+      component has a canUse entry for the cobra vendor. Configuration
+      libraries (e.g., Viper) are permitted in the Infrastructure layer
+      since they are infrastructure concerns, not CLI framework concerns.
+
+  - id: CKSPEC-ARCH-004
+    title: Business logic isolation
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Business Logic packages MUST NOT import each other. Each Business
+      Logic package MUST depend only on the Infrastructure layer (shared
+      services) and the language's standard library. Shared logic between
+      Business Logic packages MUST be extracted to the Infrastructure layer.
+    rationale: >
+      Separation of Concerns (Principle 5) prevents coupling between
+      features. When business logic packages import each other, changes
+      cascade unpredictably. Extracting shared logic to Infrastructure
+      creates a stable platform (Principle 4) that multiple features can
+      depend on without coupling to each other.
+
+  - id: CKSPEC-ARCH-005
+    title: Infrastructure independence
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      The Infrastructure layer MUST NOT depend on the Business Logic layer
+      or the Command layer. Infrastructure provides shared services
+      (configuration, logging, output, test utilities) that other layers
+      consume. Infrastructure MAY depend on external libraries appropriate
+      to its purpose (e.g., configuration libraries).
+    rationale: >
+      Platforms, Not Features (Principle 4) requires that Infrastructure
+      be a stable foundation. If it depends on upper layers, changes to
+      commands or business logic destabilize shared services. Separation of
+      Concerns (Principle 5) requires that foundation code and feature code
+      live in different dependency directions.
+
+  - id: CKSPEC-ARCH-006
+    title: Entry point minimality
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      The program entry point MUST contain only bootstrap logic: initialize
+      the command layer and handle top-level errors. It MUST NOT contain
+      business logic, configuration parsing, or feature-specific code. The
+      entry point SHOULD be small enough that excluding it from unit test
+      coverage is a reasonable decision.
+    rationale: >
+      Separation of Concerns (Principle 5) demands that the entry point
+      does one thing: bootstrap. Lean Iteration (Principle 3) favors
+      minimal code at the boundary where testing is most expensive (process
+      entry). All testable logic belongs in layers that can be exercised
+      without launching the full program.
+    notes: >
+      In ckeletin-go, main.go is 36 lines. The main() function calls
+      os.Exit(run()), and run() delegates to cmd.Execute() with error
+      handling. This pattern keeps main.go excluded from coverage
+      requirements while ensuring all logic is testable via run().
+
+  - id: CKSPEC-ARCH-007
+    title: Package location enforcement
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: >
+      Source files MUST reside only in designated directories. The project
+      root MUST contain only the entry point file (and its test file, if
+      applicable). All other source files MUST be organized into the
+      appropriate layer directories. If a Public package layer exists, its
+      packages MUST NOT import from private implementation packages.
+    rationale: >
+      Automated Enforcement (Principle 2) requires that file placement
+      rules be machine-checkable. Truth-Seeking (Principle 1) demands
+      that the directory tree honestly reflects the architecture -- a file
+      outside its designated directory is a lie that erodes the layered
+      structure. Separation of Concerns (Principle 5) extends to the
+      filesystem: each directory has a clear purpose.
+    notes: >
+      In ckeletin-go, validate-package-organization.sh enforces: only
+      main.go at root, Go packages only in cmd/, internal/, pkg/, scripts/,
+      test/, or testdata/, and pkg/ packages must not import internal/.
+      Language-specific implementations define their own designated
+      directories appropriate to the language's conventions.
