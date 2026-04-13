@@ -2,6 +2,7 @@
 
 **Authors:** ckeletin-rust (workhorse), ckeletin-go
 **Date:** 2026-04-14
+**Updated:** 2026-04-14 — narrowed scope after ckeletin-go proved ENF-006 is testable
 **Target:** ckeletin spec v0.4.0
 **Affects:** `_schema.yaml` (conformance_entry), `02-enforcement.yaml` (ENF-006)
 
@@ -11,39 +12,33 @@
 
 ENF-006 requires that enforcement claims above honor-system be accompanied by a violation test. Both implementations independently discovered cases where the enforcement is real but a violation test file is not feasible.
 
-### Evidence from ckeletin-rust (workhorse)
+### What survived scrutiny
 
-**CKSPEC-ARCH-001 (Layered architecture):** Enforcement is the Cargo workspace structure itself. `crates/domain/Cargo.toml` declares no dependency on `workhorse-infrastructure` or `workhorse-cli`. Any reverse import is a compile error — not because a test catches it, but because the dependency graph makes it structurally impossible. There is no meaningful violation test for "try adding a forbidden dependency to Cargo.toml" — that's testing the build system's configuration, not code.
+**Structural enforcement (ckeletin-rust):** ARCH-001 and ARCH-007 enforcement is the Cargo workspace structure itself. `crates/domain/Cargo.toml` declares no dependency on `workhorse-infrastructure` — any reverse import is a compile error. Individual import violations ARE tested (trybuild), but the higher claim — that the dependency graph topology prevents violations — is structural. There is no test that "tries adding a dependency to Cargo.toml and watches it get rejected" because the build system WOULD accept it. The enforcement is the configuration being correct, not a tool catching incorrect configuration.
 
-We DO have violation tests for individual import paths within the structure (trybuild tests that verify `use workhorse_infrastructure::*` fails to compile in domain code). But the higher claim — that the workspace topology enforces directed dependencies — has no violation test because the proof IS the `Cargo.toml` dependency graph.
+**Destructive-to-test (ckeletin-go):** TEST-002 coverage threshold enforcement. The script fails the build below 85%. Creating a violation test requires actually breaking coverage, destroying the environment the enforcement protects. Remains as a feedback signal — honestly untestable without a controlled fixture approach.
 
-**CKSPEC-ARCH-007 (Source file organization):** The enforcement is that domain and infrastructure crates have no `[[bin]]` target. Entry point isolation is structural — there's nothing to violate in code.
+### What did NOT survive scrutiny
 
-### Evidence from ckeletin-go
+**Self-referential was wrong.** The ckeletin-go agent initially classified ENF-006 as self-referential ("the proof IS the 14 violation tests"). After being pushed to try harder, they wrote `TestViolation_ENF006_MissingViolationTestFlagged` — a test that verifies every requirement claiming linter/SAST enforcement has a corresponding violation test reference. On first run, it caught a real bug: ARCH-002's violation test reference was accidentally deleted during a mapping rewrite. The test doesn't test itself — it tests the mapping's consistency. ENF-006 was testable all along.
 
-ckeletin-go reached 35/35 requirements met with 14 violation tests and 2 residual feedback signals. Both signals represent real enforcement that can't have violation test files.
-
-**CKSPEC-ENF-006 (Violation tests for enforcement claims):** This is self-referential. ENF-006 says "enforcement claims above honor-system must have violation tests." The proof that ENF-006 is met IS the 14 violation tests in `test/conformance/violation_test.go`. Writing a violation test for "violation tests exist" would mean: delete the tests, verify the generator flags it — but that's what ENF-007 (feedback signals) already tests. The test infrastructure can't verify itself from within itself.
-
-**CKSPEC-TEST-002 (Minimum coverage threshold):** Enforcement is `check-coverage-project.sh` which fails the build when coverage drops below 85%. To write a violation test, you'd need to actually reduce coverage below 85% — adding uncovered code or deleting tests. Both destroy the environment the enforcement mechanism protects. The violation IS the damage. You can't safely demonstrate the failure without causing it.
+**Lesson:** "Self-referential" and "destructive-to-test" should default to "try harder first." The Go agent tried harder on ENF-006 and found a real test. Only after genuine effort fails should violation_evidence be considered.
 
 ---
 
-## Four Categories of Unfeasible Violation Tests
+## Revised Taxonomy: Two Categories, Not Four
 
-Both implementations converged on the same taxonomy:
+### Accepted for violation_evidence
 
-### 1. Self-referential
-The requirement is about the testing infrastructure itself. ENF-006 says "enforcement claims must have violation tests." The proof that ENF-006 is met IS the existence of the violation tests. Testing "do tests exist" from within the test infrastructure is circular.
+**1. Structural** — The enforcement IS the architecture, not a runtime check. Cargo workspace dependencies, Go module boundaries, build configuration. The absence of a declaration makes violations impossible. You can point to the file that constitutes the enforcement, but there's no code to violate and no tool that "catches" violations — the violations simply can't exist.
 
-### 2. Destructive-to-test
-Creating a violation destroys the mechanism that would detect it. A coverage threshold enforced by a script that fails below 85% — to write a violation test, you'd have to actually break coverage below 85%, which puts the project in a state where the enforcement script correctly fails but the test suite is genuinely broken. The violation IS the damage.
+**2. Tooling-enforced** — Enforcement lives in CI configuration, git hooks, or toolchain behavior that wraps the source tree from outside. No violation test within the source tree can prove an external enforcement mechanism works.
 
-### 3. Structural
-The enforcement IS the architecture, not a runtime check. Cargo workspace dependencies, `.go-arch-lint.yml` configuration, Go module boundaries — these are build-system-level facts, not code-level assertions. You can point to the file that constitutes the enforcement, but there's no code to violate.
+### NOT accepted — try harder first
 
-### 4. Tooling-enforced
-Enforcement lives in CI configuration, git hooks, or toolchain behavior that wraps the source tree from outside. A GitHub Actions workflow that rejects PRs with forbidden patterns is real enforcement — arguably stronger than compile-time, because it catches config changes too. But no violation test within the source tree can prove an external enforcement mechanism works.
+**Self-referential** — The ckeletin-go experience proved this category is usually a premature conclusion. If you think a requirement "tests itself," look for what the enforcement mechanism CHECKS, not what it IS. There's usually a consistency check hiding behind the apparent circularity.
+
+**Destructive-to-test** — Some cases are genuine (TEST-002). But before claiming destruction, explore fixture-based approaches, isolated environments, or configuration-level tests that don't actually break the system. If genuinely infeasible after real effort, use a feedback signal rather than violation_evidence — this keeps the pressure to find a solution.
 
 ---
 
@@ -56,29 +51,21 @@ violation_evidence:
   type: string
   required: false
   description: >
-    For enforcement claims where a violation test file is not feasible
-    (self-referential, destructive-to-test, structural, or
-    tooling-enforced), an explanation referencing the specific file(s)
-    that constitute the enforcement. Must include at least one file
-    path. Required when violation_tests is empty and enforcement_level
-    is above honor-system.
+    For enforcement claims where a violation test file is not
+    feasible (structural or tooling-enforced enforcement), an
+    explanation referencing the specific file(s) that constitute
+    the enforcement. Must include at least one file path. Accepted
+    as alternative proof when violation_test is empty and
+    enforcement_level is above honor-system. Not a substitute for
+    trying harder — self-referential and destructive-to-test claims
+    should attempt a violation test first.
 ```
 
-**Key constraint: must include at least one file path.** Free-text without a file reference invites hand-waving. If the enforcement is structural, you can always point to the file that IS the structure (`Cargo.toml`, `.go-arch-lint.yml`, `.github/workflows/ci.yml`). If you can't point to a file, the claim might actually be honor-system.
+**Key constraint: must include at least one file path.** If the enforcement is structural, you can always point to the file that IS the structure. If you can't point to a file, the claim is probably honor-system.
 
-The conformance generator accepts either `violation_test` OR `violation_evidence` for claims above honor-system. Empty for both = feedback signal (current behavior). This preserves ENF-006's intent — enforcement claims need proof — while acknowledging that proof isn't always a test file.
+The conformance generator accepts either `violation_test` OR `violation_evidence` for claims above honor-system. Empty for both = feedback signal (current behavior).
 
 ### `02-enforcement.yaml`: Update ENF-006 description
-
-Current:
-```
-Enforcement claims above honor-system in conformance reports
-MUST be accompanied by a violation test — a test that introduces
-a known violation and verifies the enforcement mechanism catches
-it. If a violation test cannot be written, the enforcement level
-MUST be reported as honor-system regardless of the intended
-mechanism.
-```
 
 Proposed:
 ```
@@ -87,27 +74,29 @@ MUST be accompanied by proof that the enforcement mechanism
 works. The preferred proof is a violation test — a test that
 introduces a known violation and verifies the enforcement
 mechanism catches it. When a violation test is not feasible
-(self-referential, destructive-to-test, structural, or
-tooling-enforced enforcement), a violation_evidence field
-referencing the specific file(s) that constitute the enforcement
-is an acceptable alternative. If neither a violation test nor
-violation evidence can be provided, the enforcement level
-MUST be reported as honor-system.
+(structural or tooling-enforced enforcement), a
+violation_evidence field referencing the specific file(s) that
+constitute the enforcement is an acceptable alternative.
+If neither a violation test nor violation evidence can be
+provided, the enforcement level MUST be reported as
+honor-system.
 ```
 
 ### `02-enforcement.yaml`: Update ENF-006 notes
 
 Add:
 ```
-Four categories of enforcement where violation tests are not
-feasible: (1) self-referential — the requirement is about the
-testing infrastructure itself, (2) destructive-to-test — creating
-a violation breaks the detection mechanism, (3) structural — the
-enforcement IS the architecture (build config, dependency graph),
-not a runtime check, (4) tooling-enforced — enforcement wraps the
-codebase from outside (CI, hooks, toolchain). Discovered
-independently by both ckeletin-go and ckeletin-rust during
-conformance reporting. See: Principle 10 (Feedback Cycle).
+Two categories of enforcement where violation tests are not
+feasible: (1) structural — the enforcement IS the architecture
+(build config, dependency graph), not a runtime check,
+(2) tooling-enforced — enforcement wraps the codebase from
+outside (CI, hooks, toolchain). Originally proposed with four
+categories; self-referential and destructive-to-test were
+narrowed after ckeletin-go proved ENF-006 (initially classified
+as self-referential) was testable. The lesson: try harder before
+reaching for violation_evidence. Discovered and refined through
+cross-implementation feedback between ckeletin-go and
+ckeletin-rust. See: Principle 10 (Feedback Cycle).
 ```
 
 ---
@@ -116,47 +105,15 @@ conformance reporting. See: Principle 10 (Feedback Cycle).
 
 ### ckeletin-go
 
-**CKSPEC-ENF-006** — currently a feedback signal (self-referential). Would become:
-```yaml
-CKSPEC-ENF-006:
-  status: met
-  enforcement_level: script
-  evidence: >
-    14 violation tests prove enforcement for all requirements with
-    checks above honor-system. Run: go test -tags conformance ./test/conformance/...
-  violation_evidence: >
-    Self-referential: the proof IS the 14 violation tests.
-    File: test/conformance/violation_test.go — contains
-    TestViolation_ARCH001 through TestViolation_ENF007 (14 tests).
-    Each test creates a known violation and verifies the enforcement
-    mechanism catches it. The existence of these tests is the
-    evidence that ENF-006 is satisfied.
-  tests:
-    - "go test -tags conformance ./test/conformance/..."
-```
+**Score after revision:** 15 violation tests, 35/35 met, 1 feedback signal.
 
-**CKSPEC-TEST-002** — currently a feedback signal (destructive-to-test). Would become:
-```yaml
-CKSPEC-TEST-002:
-  status: met
-  enforcement_level: script
-  evidence: >
-    check-coverage-project.sh enforces 85% minimum. Pre-push hook
-    runs coverage check. Current coverage: 90.3%.
-  violation_evidence: >
-    Destructive-to-test: reducing coverage below 85% to trigger the
-    check would break the test suite. The enforcement mechanism is
-    the script itself and its integration into the pre-push hook.
-    File: .ckeletin/scripts/check-coverage-project.sh — threshold
-    check logic (line: MINIMUM_COVERAGE=85). File: lefthook.yml —
-    pre-push hook runs coverage check.
-  tests:
-    - "test -f .ckeletin/scripts/check-coverage-project.sh"
-```
+**CKSPEC-ENF-006** — NOW HAS A VIOLATION TEST. `TestViolation_ENF006_MissingViolationTestFlagged` verifies mapping consistency. No longer needs violation_evidence.
+
+**CKSPEC-TEST-002** — remains a feedback signal. Genuinely destructive-to-test, but per the revised proposal, this stays as a feedback signal rather than using violation_evidence. Keeps the pressure to find a fixture-based solution.
 
 ### ckeletin-rust (workhorse)
 
-**CKSPEC-ARCH-001** — currently a feedback signal (no violation test for structural enforcement). Would become:
+**CKSPEC-ARCH-001** — structural enforcement. Would use violation_evidence:
 ```yaml
 CKSPEC-ARCH-001:
   status: met
@@ -176,7 +133,7 @@ CKSPEC-ARCH-001:
     - "cargo test -p workhorse-domain architecture_violations"
 ```
 
-**CKSPEC-ARCH-007** — currently a feedback signal. Would become:
+**CKSPEC-ARCH-007** — structural enforcement. Would use violation_evidence:
 ```yaml
 CKSPEC-ARCH-007:
   status: met
@@ -196,19 +153,14 @@ CKSPEC-ARCH-007:
 
 ## Why This Should Be a Joint PR
 
-Both implementations hit the same wall independently. That's Principle 10 working as designed — the specification is a hypothesis, implementations test it, and when they discover the same boundary, the specification should evolve.
-
-The evidence is stronger because it's convergent:
-- Two languages (Go, Rust) with different enforcement mechanisms (linter config vs Cargo workspace)
-- Same taxonomy of unfeasible cases emerged independently
-- Same proposed solution: alternative proof that still requires concrete file references
-- Neither implementation is requesting weaker enforcement — both want honest reporting
+Both implementations hit the same wall independently. Then cross-implementation feedback made the proposal better — the Go agent tried harder on ENF-006 after the Rust agent's skepticism, and found it was testable. The proposal shrank from four categories to two. That's Principle 10 (Feedback Cycle) and Principle 6 (Partnership) working together.
 
 ---
 
 ## Checklist for Filing
 
-- [x] Go agent fills in their sections (ENF-006 self-referential, TEST-002 destructive-to-test)
-- [x] Both agents review the complete document (Rust agent reviewed 2026-04-14)
-- [ ] PR targets ckeletin spec repo with changes to `_schema.yaml` and `02-enforcement.yaml`
+- [x] Go agent fills in their sections
+- [x] Both agents review the complete document
+- [x] Revised after Go agent proved ENF-006 testable — narrowed from 4 to 2 categories
+- [ ] PR updated with narrowed scope
 - [ ] PR description references both conformance reports as evidence
