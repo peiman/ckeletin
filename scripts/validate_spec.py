@@ -96,3 +96,43 @@ def validate_level(level):
     if level not in VALID_LEVELS:
         errors.append(f"'{level}' is not a valid level (must be MUST, SHOULD, or MAY)")
     return errors
+
+
+REQUIRED_CONFORMANCE_HEADER_FIELDS = {"implementation", "spec_version", "report_date"}
+
+REQUIRED_CONFORMANCE_ENTRY_FIELDS = {"status", "evidence"}
+
+
+def validate_conformance_header(data, filename):
+    """Check that a conformance report has required header fields."""
+    errors = []
+    for field in sorted(REQUIRED_CONFORMANCE_HEADER_FIELDS):
+        if field not in data:
+            errors.append(f"{filename}: missing header field '{field}'")
+    return errors
+
+
+def validate_conformance_entry(req_id, entry, filename):
+    """Check that a conformance entry has required fields and valid values."""
+    errors = []
+    for field in sorted(REQUIRED_CONFORMANCE_ENTRY_FIELDS):
+        if field not in entry:
+            errors.append(f"{filename} {req_id}: missing '{field}'")
+    if "status" in entry and entry["status"] not in VALID_STATUSES:
+        errors.append(
+            f"{filename} {req_id}: invalid status '{entry['status']}'"
+            f" (must be one of: {', '.join(sorted(VALID_STATUSES))})"
+        )
+    return errors
+
+
+def validate_conformance_coverage(spec_ids, conformance_ids, filename):
+    """Check that spec and conformance IDs match exactly."""
+    errors = []
+    missing_from_conformance = spec_ids - conformance_ids
+    orphaned_in_conformance = conformance_ids - spec_ids
+    for mid in sorted(missing_from_conformance):
+        errors.append(f"{filename}: spec ID '{mid}' has no conformance entry")
+    for oid in sorted(orphaned_in_conformance):
+        errors.append(f"{filename}: conformance ID '{oid}' has no matching spec requirement")
+    return errors

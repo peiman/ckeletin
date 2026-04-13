@@ -8,9 +8,14 @@ from scripts.validate_spec import (
     collect_all_ids,
     validate_id_uniqueness,
     validate_level,
+    validate_conformance_header,
+    validate_conformance_entry,
+    validate_conformance_coverage,
     REQUIRED_DOMAIN_FIELDS,
     REQUIRED_REQUIREMENT_FIELDS,
+    REQUIRED_CONFORMANCE_HEADER_FIELDS,
     VALID_LEVELS,
+    VALID_STATUSES,
 )
 
 
@@ -137,3 +142,64 @@ class TestEnumValidation:
         for req in data.get("requirements", []):
             errors = validate_level(req["level"])
             assert len(errors) > 0
+
+
+class TestConformanceValidation:
+    def test_real_conformance_has_header(self, conformance_dir):
+        """Real conformance report must have required header fields."""
+        for fname in os.listdir(conformance_dir):
+            if fname.endswith(".yaml"):
+                path = os.path.join(conformance_dir, fname)
+                data = load_spec_file(path)
+                errors = validate_conformance_header(data, fname)
+                assert errors == [], f"{fname}: {errors}"
+
+    def test_real_conformance_entries_valid(self, conformance_dir):
+        """Real conformance entries must have status + evidence."""
+        for fname in os.listdir(conformance_dir):
+            if fname.endswith(".yaml"):
+                path = os.path.join(conformance_dir, fname)
+                data = load_spec_file(path)
+                for req_id, entry in data.get("requirements", {}).items():
+                    errors = validate_conformance_entry(req_id, entry, fname)
+                    assert errors == [], f"{fname} {req_id}: {errors}"
+
+    def test_real_conformance_coverage_complete(self, spec_dir, conformance_dir):
+        """Every spec ID must have a conformance entry and vice versa."""
+        spec_ids = collect_all_ids(spec_dir)
+        for fname in os.listdir(conformance_dir):
+            if fname.endswith(".yaml"):
+                path = os.path.join(conformance_dir, fname)
+                data = load_spec_file(path)
+                conformance_ids = set(data.get("requirements", {}).keys())
+                errors = validate_conformance_coverage(
+                    {sid for sid, _ in spec_ids}, conformance_ids, fname
+                )
+                assert errors == [], f"{fname}: {errors}"
+
+    def test_missing_evidence_detected(self, fixtures_dir):
+        """Conformance entry without evidence must be rejected."""
+        path = os.path.join(fixtures_dir, "bad_conformance_missing.yaml")
+        data = load_spec_file(path)
+        for req_id, entry in data.get("requirements", {}).items():
+            errors = validate_conformance_entry(req_id, entry, "bad_conformance_missing.yaml")
+            assert len(errors) > 0, f"Should detect missing evidence for {req_id}"
+
+    def test_invalid_status_detected(self, fixtures_dir):
+        """Conformance entry with invalid status must be rejected."""
+        path = os.path.join(fixtures_dir, "bad_conformance_status.yaml")
+        data = load_spec_file(path)
+        for req_id, entry in data.get("requirements", {}).items():
+            errors = validate_conformance_entry(req_id, entry, "bad_conformance_status.yaml")
+            assert len(errors) > 0, f"Should reject status 'complete' for {req_id}"
+
+    def test_orphan_conformance_detected(self, fixtures_dir, spec_dir):
+        """Conformance entry referencing nonexistent spec ID must be caught."""
+        spec_ids = {sid for sid, _ in collect_all_ids(spec_dir)}
+        path = os.path.join(fixtures_dir, "bad_conformance_orphan.yaml")
+        data = load_spec_file(path)
+        conformance_ids = set(data.get("requirements", {}).keys())
+        errors = validate_conformance_coverage(
+            spec_ids, conformance_ids, "bad_conformance_orphan.yaml"
+        )
+        assert len(errors) > 0, "Should detect orphan CKSPEC-GHOST-001"
