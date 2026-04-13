@@ -9,6 +9,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
+- Conformance cycle requirements (CKSPEC-ENF-005 to 007) — mapping completeness, violation tests, automatic feedback signals
+- enforcement_level field on conformance_entry schema — makes enforcement ladder visible in conformance data
+- violation_test field on conformance_entry schema — links enforcement claims to proof
 - Output domain (CKSPEC-OUT-001 to 005) — 3-stream model, JSON mode, shadow logging, output isolation
 - Agent Readiness domain (CKSPEC-AGENT-001 to 005) — AGENTS.md, provider guides, CLI as agent interface
 - changie integration for changelog management — enforces CKSPEC-CL requirements
@@ -16,6 +19,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Changed
 
+- CKSPEC-ARCH-004: added notes clarifying serialization annotations are permitted on business logic types
+- CKSPEC-ENF-002: added notes on language-varying enforcement levels
+- Clarified checkable field in schema — captures whether a requirement CAN be checked, not how strongly
 - Principles restructured — derives from [Manifesto](https://github.com/peiman/manifesto)
 - Added Curiosity Over Certainty, Good Will, Partnership to principles
 - Folded Framework Independence into Separation of Concerns

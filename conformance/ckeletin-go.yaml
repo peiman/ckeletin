@@ -98,7 +98,7 @@ requirements:
       - "task validate:package-organization"
 
   # ---------------------------------------------------------------------------
-  # Enforcement (CKSPEC-ENF-001 through CKSPEC-ENF-004)
+  # Enforcement (CKSPEC-ENF-001 through CKSPEC-ENF-007)
   # ---------------------------------------------------------------------------
 
   CKSPEC-ENF-001:
@@ -153,6 +153,39 @@ requirements:
       system (1), Meta (1 — ADR-014 itself).
     tests:
       - "task validate:architecture"
+
+  CKSPEC-ENF-005:
+    status: deferred
+    evidence: >
+      No conformance report generator exists yet. The current
+      conformance report (this file) is hand-written. Building
+      task conform with mapping completeness validation is planned
+      as part of the conformance cycle work.
+    notes: >
+      This requirement was added as part of the conformance cycle
+      initiative coordinated between ckeletin-go and ckeletin-rust.
+
+  CKSPEC-ENF-006:
+    status: deferred
+    evidence: >
+      No violation tests exist for any enforcement claim in the
+      current conformance report. ckeletin-go has 23 automated
+      checks but none have violation tests proving they catch
+      violations. Writing violation tests is the next step before
+      the conformance mapping can make honest enforcement claims.
+    notes: >
+      Feedback: ckeletin-go's enforcement claims in this report
+      are currently unverified in the failure direction. All 23
+      checks have been observed to pass on clean code, but none
+      have been proven to catch dirty code.
+
+  CKSPEC-ENF-007:
+    status: deferred
+    evidence: >
+      No automated conformance report generator exists yet.
+      Automatic feedback signals require a generator that can
+      compare check coverage against spec requirements. Planned
+      as part of task conform implementation.
 
   # ---------------------------------------------------------------------------
   # Testing (CKSPEC-TEST-001 through CKSPEC-TEST-004)
@@ -333,9 +366,11 @@ requirements:
     status: met
     evidence: >
       internal/ui/renderer.go RenderSuccess performs shadow logging:
-      log.Info() with "data" interface field writes raw struct to
-      audit log, while formatted text goes to stdout. Both happen
-      in the same function call. Audit stream always active.
+      log.Debug() with "data" interface field writes raw struct to
+      audit log file, while formatted text goes to stdout. Both happen
+      in the same function call. Audit stream always active. Debug
+      level ensures shadow logs reach the file logger (default: debug)
+      without polluting the console (default: info).
     tests: []
 
   CKSPEC-OUT-005:
