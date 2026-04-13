@@ -5,6 +5,16 @@ All notable changes to the ckeletin specification.
 Format: [Keep a Changelog](https://keepachangelog.com/)
 Versioning: [Semantic Versioning](https://semver.org/)
 
+## [Unreleased]
+
+## [0.1.2] - 2026-04-13
+
+### Added
+- Changelog domain (CKSPEC-CL-001 to 007) — Keep a Changelog, SemVer,
+  ISO 8601, Unreleased section, human curation, comparison links
+- Research directory with changelog best practices source material
+- ckeletin-go conformance for changelog requirements (7/7 met)
+
 ## [0.1.1] - 2026-04-13
 
 ### Added

@@ -13,23 +13,24 @@ This is not a top-down mandate. The specification and its
 implementations learn from each other — conformance reports are
 retrospectives, not audits.
 
-## Current State (v0.1.0 — Lean Start)
+## Current State
 
-Three core domains, verified against one implementation:
+Four domains, verified against one implementation:
 
 | Domain | Requirements | What it covers |
 |--------|-------------|----------------|
 | Architecture | CKSPEC-ARCH-001 to 007 | 4-layer architecture, dependency rules |
 | Enforcement | CKSPEC-ENF-001 to 004 | Every decision must be enforced |
 | Testing | CKSPEC-TEST-001 to 004 | TDD, coverage, dependency injection |
+| Changelog | CKSPEC-CL-001 to 007 | Keep a Changelog, SemVer, human-curated |
 
-More domains will be added when ckeletin-rust needs them.
+More domains added as ckeletin-rust needs them.
 
 ## Implementations
 
 | Implementation | Language | Conformance |
 |---------------|----------|-------------|
-| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 15/15 met |
+| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 22/22 met |
 | ckeletin-rust | Rust | Planned |
 
 ## Validation
@@ -59,8 +60,10 @@ spec/
   01-architecture.yaml     — 4-layer architecture
   02-enforcement.yaml      — Automated enforcement
   03-testing.yaml          — TDD, coverage, DI
+  04-changelog.yaml        — Changelog format and practices
 conformance/
   ckeletin-go.yaml         — Go conformance report
+research/                  — Source research behind requirements
 principles.md              — The why behind everything
 ```
 

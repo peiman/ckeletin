@@ -1,0 +1,135 @@
+# spec/04-changelog.yaml
+# Changelog requirements for ckeletin-conformant CLI projects.
+#
+# Based on research: research/changelog-best-practices.md
+# Primary sources: Keep a Changelog, Common Changelog, SemVer
+
+domain:
+  name: Changelog
+  description: >
+    Human-curated record of notable changes per version. Changelogs
+    are for humans, not machines — they communicate what changed and
+    why it matters, not raw commit history. Plain text in the repo
+    ensures durability across platform migrations and time.
+
+requirements:
+  - id: CKSPEC-CL-001
+    title: CHANGELOG.md in repository root
+    level: MUST
+    since: v0.1.2
+    checkable: true
+    description: >
+      Projects MUST maintain a CHANGELOG.md file in the repository
+      root. This file is the single source of truth for the change
+      history. Changelogs MUST NOT live exclusively in platform-
+      specific locations (GitHub Releases, Notion, Confluence) —
+      those may mirror the changelog but MUST NOT replace it.
+    rationale: >
+      Single Source of Truth (Principle 9) demands one authoritative
+      location. Plain text in the repo survives platform migrations,
+      forks, and the eventual death of any third-party service.
+      Truth-Seeking (Principle 1) requires that the record be
+      verifiable from the repository itself.
+
+  - id: CKSPEC-CL-002
+    title: Keep a Changelog format
+    level: MUST
+    since: v0.1.2
+    checkable: true
+    description: >
+      Changelogs MUST follow the Keep a Changelog format. Changes
+      MUST be grouped under exactly six categories: Added, Changed,
+      Deprecated, Removed, Fixed, Security. Versions MUST appear
+      in reverse chronological order (newest first). Each version
+      heading MUST include the version number and release date.
+    rationale: >
+      Lean Iteration (Principle 3) favors the simplest standard
+      that works — Keep a Changelog is the most widely adopted
+      convention in open source. The six categories cover all
+      change types and let readers scan for what matters to them.
+      Consistent structure across ckeletin projects reduces
+      cognitive load.
+
+  - id: CKSPEC-CL-003
+    title: ISO 8601 dates
+    level: MUST
+    since: v0.1.2
+    checkable: true
+    description: >
+      All dates in the changelog MUST use ISO 8601 format
+      (YYYY-MM-DD). Regional date formats (MM/DD/YYYY,
+      DD/MM/YYYY) MUST NOT be used.
+    rationale: >
+      Truth-Seeking (Principle 1) requires unambiguous dates.
+      06/02/2026 is June 2 in the US and February 6 in Europe.
+      YYYY-MM-DD is internationally unambiguous, sorts
+      lexicographically, and is an ISO standard — it will be
+      parseable forever.
+
+  - id: CKSPEC-CL-004
+    title: Semantic Versioning
+    level: MUST
+    since: v0.1.2
+    checkable: false
+    description: >
+      Projects MUST follow Semantic Versioning (MAJOR.MINOR.PATCH).
+      MAJOR for incompatible changes, MINOR for backward-compatible
+      new functionality, PATCH for backward-compatible fixes. The
+      changelog MUST state that the project follows SemVer.
+    rationale: >
+      Platforms, Not Features (Principle 4) requires that version
+      numbers carry predictable meaning. SemVer combined with a
+      changelog gives users everything needed for safe upgrade
+      decisions — the version signals risk level, the changelog
+      explains what changed.
+
+  - id: CKSPEC-CL-005
+    title: Unreleased section
+    level: MUST
+    since: v0.1.2
+    checkable: true
+    description: >
+      The changelog MUST maintain an [Unreleased] section at the
+      top. In-progress changes accumulate here. At release time,
+      the Unreleased heading is renamed to the new version and
+      date, and a fresh empty Unreleased section is created above
+      it.
+    rationale: >
+      Lean Iteration (Principle 3) — the Unreleased section makes
+      upcoming changes visible without requiring a release. It
+      avoids the chaos of contributors not knowing which version
+      number to assign to ongoing work.
+
+  - id: CKSPEC-CL-006
+    title: Human-curated, not auto-generated
+    level: MUST
+    since: v0.1.2
+    checkable: false
+    description: >
+      Changelogs MUST be human-curated. Automation tools MAY
+      generate a draft from commit history, but the published
+      changelog MUST be reviewed and edited by a human before
+      release. Raw git log output MUST NOT be used as a changelog.
+    rationale: >
+      Truth-Seeking (Principle 1) — a git log dump is raw data,
+      not curated knowledge. It includes merge commits, typo fixes,
+      CI tweaks, and meaningless messages. A changelog serves a
+      different audience (users) at a different granularity
+      (features, not commits). The editorial act of curation is
+      what transforms data into useful information.
+
+  - id: CKSPEC-CL-007
+    title: Version comparison links
+    level: SHOULD
+    since: v0.1.2
+    checkable: true
+    description: >
+      Changelogs SHOULD include reference-style Markdown links at
+      the bottom that link each version to its diff on the hosting
+      platform. This makes the changelog self-navigating — readers
+      can click any version to see every line that changed.
+    rationale: >
+      Platforms, Not Features (Principle 4) — comparison links
+      make the changelog a durable navigation tool. If the hosting
+      platform changes, update the URLs once; the changelog
+      structure remains intact.
