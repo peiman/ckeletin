@@ -162,5 +162,5 @@ Both implementations hit the same wall independently. Then cross-implementation 
 - [x] Go agent fills in their sections
 - [x] Both agents review the complete document
 - [x] Revised after Go agent proved ENF-006 testable — narrowed from 4 to 2 categories
-- [ ] PR updated with narrowed scope
-- [ ] PR description references both conformance reports as evidence
+- [x] PR updated with narrowed scope
+- [x] PR description references both conformance reports as evidence
