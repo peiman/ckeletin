@@ -5,6 +5,19 @@ All notable changes to the ckeletin specification.
 Format: [Keep a Changelog](https://keepachangelog.com/)
 Versioning: [Semantic Versioning](https://semver.org/)
 
+## [0.1.1] - 2026-04-13
+
+### Added
+- Principle 9: Single Source of Truth (SSOT)
+- Spec validation script (scripts/validate_spec.py) — TDD, 23 tests
+- 7 failure fixture files for validation testing
+- Taskfile with venv-based task check / task test / task setup
+- Numbered spec files to encode reading order (01-, 02-, 03-)
+
+### Changed
+- Removed Go-specific implementation details from spec YAML notes
+  (implementation details belong in conformance reports, not the spec)
+
 ## [0.1.0] - 2026-04-12
 
 ### Added
