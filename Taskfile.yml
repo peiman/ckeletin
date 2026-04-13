@@ -25,3 +25,23 @@ tasks:
     deps: [setup]
     cmds:
       - '{{.PYTHON}} -m pytest tests/ -v'
+
+  changelog:added:
+    desc: "Add an Added entry (usage: task changelog:added -- 'description')"
+    cmds:
+      - changie changelog added "{{.CLI_ARGS}}"
+
+  changelog:changed:
+    desc: "Add a Changed entry (usage: task changelog:changed -- 'description')"
+    cmds:
+      - changie changelog changed "{{.CLI_ARGS}}"
+
+  changelog:fixed:
+    desc: "Add a Fixed entry (usage: task changelog:fixed -- 'description')"
+    cmds:
+      - changie changelog fixed "{{.CLI_ARGS}}"
+
+  release:
+    desc: "Bump version (usage: task release -- minor)"
+    cmds:
+      - changie bump {{.CLI_ARGS}}

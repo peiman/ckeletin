@@ -7,6 +7,11 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+### Added
+
+- changie integration for changelog management — enforces CKSPEC-CL requirements
+- Taskfile changelog and release commands (task changelog:added, task release)
+
 ## [0.1.2] - 2026-04-13
 
 ### Added

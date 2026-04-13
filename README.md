@@ -52,6 +52,19 @@ python3 -m venv .venv
 .venv/bin/python scripts/validate_spec.py
 ```
 
+## Changelog Management
+
+Uses [changie](https://github.com/peiman/changie) for changelog
+enforcement (CKSPEC-CL requirements).
+
+```bash
+task changelog:added -- "New feature description"
+task changelog:fixed -- "Bug fix description"
+task release -- minor
+```
+
+Or directly: `changie changelog added "..."`, `changie bump minor`.
+
 ## Structure
 
 ```
