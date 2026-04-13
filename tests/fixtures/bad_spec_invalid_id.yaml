@@ -1,0 +1,12 @@
+domain:
+  name: Invalid ID Domain
+  description: "Has malformed ID"
+
+requirements:
+  - id: SPEC-ARCH-001
+    title: Bad ID format
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: "ID missing CKSPEC prefix"
+    rationale: "Testing"

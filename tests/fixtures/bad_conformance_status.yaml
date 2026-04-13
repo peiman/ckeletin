@@ -1,0 +1,8 @@
+implementation: test-impl
+spec_version: "0.1.0"
+report_date: "2026-04-13"
+
+requirements:
+  CKSPEC-ARCH-001:
+    status: complete
+    evidence: "Status should be met, not complete"

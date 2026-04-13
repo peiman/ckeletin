@@ -1,0 +1,19 @@
+domain:
+  name: Duplicate Domain
+  description: "Has duplicate IDs"
+
+requirements:
+  - id: CKSPEC-DUP-001
+    title: First requirement
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: "First"
+    rationale: "First"
+  - id: CKSPEC-DUP-001
+    title: Duplicate of first
+    level: MUST
+    since: v0.1.0
+    checkable: true
+    description: "Duplicate"
+    rationale: "Duplicate"

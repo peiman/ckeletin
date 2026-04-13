@@ -1,0 +1,12 @@
+domain:
+  name: Invalid Level Domain
+  description: "Has invalid level value"
+
+requirements:
+  - id: CKSPEC-LVL-001
+    title: Bad level
+    level: REQUIRED
+    since: v0.1.0
+    checkable: true
+    description: "Level is REQUIRED instead of MUST/SHOULD/MAY"
+    rationale: "Testing"

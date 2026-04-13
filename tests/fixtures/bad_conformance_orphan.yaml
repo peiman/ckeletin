@@ -1,0 +1,8 @@
+implementation: test-impl
+spec_version: "0.1.0"
+report_date: "2026-04-13"
+
+requirements:
+  CKSPEC-GHOST-001:
+    status: met
+    evidence: "This ID doesn't exist in any spec file"

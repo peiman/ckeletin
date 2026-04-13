@@ -1,0 +1,10 @@
+domain:
+  name: Bad Domain
+  description: "Missing required fields on requirements"
+
+requirements:
+  - id: CKSPEC-BAD-001
+    title: Missing rationale and checkable
+    level: MUST
+    since: v0.1.0
+    description: "This requirement is missing rationale and checkable fields"
