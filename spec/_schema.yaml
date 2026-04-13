@@ -58,7 +58,11 @@ requirement:
     checkable:
       type: boolean
       required: true
-      description: "Whether this requirement can be verified programmatically"
+      description: >
+        Whether this requirement can be verified programmatically.
+        checkable: true means the requirement CAN be checked by tooling;
+        the enforcement_level in the conformance report captures HOW
+        strongly it is verified in each implementation.
     description:
       type: string
       required: true
@@ -93,6 +97,23 @@ conformance_entry:
       type: list[string]
       required: false
       description: "Test names or paths that verify this requirement"
+    enforcement_level:
+      type: enum
+      required: false
+      values: [compile-time, linter, sast, script, ci, honor-system]
+      description: >
+        Where on the enforcement ladder (CKSPEC-ENF-002) this
+        requirement is verified. Implementations SHOULD report the
+        strongest level that applies. Omit for non-checkable
+        requirements reported via attestation.
+    violation_test:
+      type: string
+      required: false
+      description: >
+        Path to a test that introduces a known violation and verifies
+        the enforcement mechanism catches it. Required for enforcement
+        claims above honor-system — without a violation test, the
+        enforcement level is unverified.
     notes:
       type: string
       required: false

@@ -11,6 +11,7 @@ from scripts.validate_spec import (
     validate_conformance_header,
     validate_conformance_entry,
     validate_conformance_coverage,
+    collect_conformance_warnings,
     REQUIRED_DOMAIN_FIELDS,
     REQUIRED_REQUIREMENT_FIELDS,
     REQUIRED_CONFORMANCE_HEADER_FIELDS,
@@ -203,3 +204,48 @@ class TestConformanceValidation:
             spec_ids, conformance_ids, "bad_conformance_orphan.yaml"
         )
         assert len(errors) > 0, "Should detect orphan CKSPEC-GHOST-001"
+
+
+class TestConformanceWarnings:
+    def test_deferred_entries_produce_warnings(self, fixtures_dir):
+        """Deferred, not-met, and partial entries must produce warnings."""
+        warnings = collect_conformance_warnings(fixtures_dir)
+        # Filter to our specific fixture (fixtures_dir has many files)
+        deferred = [w for w in warnings if "deferred" in w]
+        not_met = [w for w in warnings if "not met" in w]
+        partial = [w for w in warnings if "partial" in w]
+        assert len(deferred) > 0, "Should warn about deferred entries"
+        assert len(not_met) > 0, "Should warn about not-met entries"
+        assert len(partial) > 0, "Should warn about partial entries"
+
+    def test_met_entries_produce_no_warnings(self):
+        """A conformance dir with only 'met' entries produces no warnings."""
+        import tempfile
+        import yaml
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report = {
+                "implementation": "perfect-impl",
+                "spec_version": "0.1.0",
+                "report_date": "2026-04-13",
+                "requirements": {
+                    "CKSPEC-TEST-001": {
+                        "status": "met",
+                        "evidence": "Everything works",
+                    },
+                },
+            }
+            path = os.path.join(tmpdir, "perfect.yaml")
+            with open(path, "w") as f:
+                yaml.dump(report, f)
+            warnings = collect_conformance_warnings(tmpdir)
+            assert warnings == [], f"Should have no warnings, got: {warnings}"
+
+    def test_real_conformance_warnings_visible(self, conformance_dir):
+        """Real conformance report's deferred entries produce warnings."""
+        warnings = collect_conformance_warnings(conformance_dir)
+        deferred = [w for w in warnings if "deferred" in w]
+        assert len(deferred) >= 3, (
+            f"Expected at least 3 deferred warnings (ENF-005/006/007), "
+            f"got {len(deferred)}: {deferred}"
+        )

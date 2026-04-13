@@ -1,0 +1,16 @@
+implementation: test-impl
+spec_version: "0.1.0"
+report_date: "2026-04-13"
+requirements:
+  CKSPEC-TEST-001:
+    status: met
+    evidence: "All tests pass"
+  CKSPEC-TEST-002:
+    status: deferred
+    evidence: "Not yet implemented"
+  CKSPEC-TEST-003:
+    status: not-met
+    evidence: "Fails validation"
+  CKSPEC-TEST-004:
+    status: partial
+    evidence: "Only half done"

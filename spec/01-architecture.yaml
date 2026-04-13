@@ -76,6 +76,7 @@ requirements:
     title: Business logic isolation
     level: MUST
     since: v0.1.0
+    modified: v0.3.0
     checkable: true
     description: >
       Business Logic packages MUST NOT import each other. Each Business
@@ -88,6 +89,14 @@ requirements:
       cascade unpredictably. Extracting shared logic to Infrastructure
       creates a stable platform (Principle 4) that multiple features can
       depend on without coupling to each other.
+    notes: >
+      Serialization annotations or derive macros from the language's
+      standard or idiomatic serialization framework (e.g., Go's
+      encoding/json struct tags, Rust's serde derives, Python's
+      dataclass decorators) are permitted on Business Logic types.
+      These are data description, not behavioral coupling — they
+      enable the Infrastructure output layer to render domain types
+      without the domain importing Infrastructure.
 
   - id: CKSPEC-ARCH-005
     title: Infrastructure independence

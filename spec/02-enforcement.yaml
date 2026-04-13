@@ -35,6 +35,7 @@ requirements:
     title: Enforcement ladder
     level: SHOULD
     since: v0.1.0
+    modified: v0.3.0
     checkable: false
     description: >
       Enforcement SHOULD use the strongest feasible mechanism. In
@@ -51,6 +52,16 @@ requirements:
       human discipline and fails under time pressure. Lean Iteration
       (Principle 3) favors the mechanism with the shortest feedback
       loop.
+    notes: >
+      The achievable enforcement level for a given requirement varies
+      by language. Rust's module visibility can enforce directed
+      dependencies at compile time; Go requires a linter tool for the
+      same guarantee. Language-native compile-time enforcement is the
+      ideal — the ladder describes fallback levels when compile-time
+      is not available. Conformance reports capture the actual
+      enforcement level per requirement (see enforcement_level in
+      the conformance schema), making cross-implementation differences
+      visible.
   - id: CKSPEC-ENF-003
     title: Document enforcement gaps
     level: MUST
@@ -85,3 +96,71 @@ requirements:
       investment in automation where it matters most. Automated
       Enforcement (Principle 2) requires knowing where automation
       is missing before it can be added.
+
+  - id: CKSPEC-ENF-005
+    title: Conformance mapping completeness
+    level: MUST
+    since: v0.3.0
+    checkable: true
+    description: >
+      Conformance report generators MUST validate that their mapping
+      covers every requirement in the target spec version before
+      producing a report. Unmapped requirements MUST cause the
+      generator to fail, not produce a partial report silently.
+      The machine-readable requirement ID list from the spec is the
+      completeness anchor.
+    rationale: >
+      Truth-Seeking (Principle 1) demands that conformance reports
+      account for every requirement — a report that omits requirements
+      creates false confidence. Automated Enforcement (Principle 9)
+      requires that completeness be machine-checked, not left to human
+      diligence. A generator that silently skips requirements is worse
+      than no generator, because its output is trusted.
+
+  - id: CKSPEC-ENF-006
+    title: Violation tests for enforcement claims
+    level: MUST
+    since: v0.3.0
+    checkable: true
+    description: >
+      Enforcement claims above honor-system in conformance reports
+      MUST be accompanied by a violation test — a test that introduces
+      a known violation and verifies the enforcement mechanism catches
+      it. If a violation test cannot be written, the enforcement level
+      MUST be reported as honor-system regardless of the intended
+      mechanism.
+    rationale: >
+      Truth-Seeking (Principle 1) requires evidence, not claims.
+      Stating that a linter catches a violation without demonstrating
+      it is an untested assertion. Curiosity Over Certainty
+      (Principle 2) demands that we verify our assumptions about
+      what our tools actually catch. A conformance report that says
+      "met at linter level" without a violation test is a hypothesis,
+      not a fact.
+    notes: >
+      Violation tests verify the enforcement mechanism, not the
+      requirement itself. A violation test for CKSPEC-ARCH-002 does
+      not test that dependencies flow correctly — it tests that
+      introducing a reverse dependency is caught by the enforcement
+      tool. This is meta-testing: testing the tests.
+
+  - id: CKSPEC-ENF-007
+    title: Automatic feedback signals
+    level: SHOULD
+    since: v0.3.0
+    checkable: true
+    description: >
+      Conformance report generators SHOULD automatically include
+      feedback signals when: (1) a checkable requirement has no
+      automated check, (2) the enforcement level is lower than the
+      spec's preferred level (per CKSPEC-ENF-002), or (3) a
+      violation test is missing for a claimed enforcement level.
+      These signals SHOULD be included in the report without human
+      intervention, closing the feedback cycle structurally.
+    rationale: >
+      Feedback Cycle (Principle 10) requires that implementations
+      feed learnings back to the spec. If feedback depends on someone
+      remembering to write it down, it won't survive time pressure
+      (Principle 9). Automatic feedback signals ensure the cycle
+      closes itself — every conformance report is also a feedback
+      report.
