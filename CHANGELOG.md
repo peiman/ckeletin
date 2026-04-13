@@ -12,13 +12,16 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - Conformance cycle requirements (CKSPEC-ENF-005 to 007) — mapping completeness, violation tests, automatic feedback signals
 - enforcement_level field on conformance_entry schema — makes enforcement ladder visible in conformance data
 - violation_test field on conformance_entry schema — links enforcement claims to proof
+- violation_evidence field on conformance_entry schema — alternative proof for structural and tooling-enforced enforcement where violation tests are not feasible (must include file path)
 - Output domain (CKSPEC-OUT-001 to 005) — 3-stream model, JSON mode, shadow logging, output isolation
 - Agent Readiness domain (CKSPEC-AGENT-001 to 005) — AGENTS.md, provider guides, CLI as agent interface
 - changie integration for changelog management — enforces CKSPEC-CL requirements
 - Taskfile changelog and release commands (task changelog:added, task release)
+- Research document: violation-evidence-proposal.md — joint proposal from ckeletin-go and ckeletin-rust with revision history
 
 ### Changed
 
+- CKSPEC-ENF-006: accepts violation_evidence as alternative to violation_test for structural and tooling-enforced enforcement; narrowed from four categories to two after ckeletin-go proved self-referential case was testable
 - CKSPEC-ARCH-004: added notes clarifying serialization annotations are permitted on business logic types
 - CKSPEC-ENF-002: added notes on language-varying enforcement levels
 - Clarified checkable field in schema — captures whether a requirement CAN be checked, not how strongly
