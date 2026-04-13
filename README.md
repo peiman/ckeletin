@@ -32,17 +32,36 @@ More domains will be added when ckeletin-rust needs them.
 | [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 15/15 met |
 | ckeletin-rust | Rust | Planned |
 
+## Validation
+
+Requires [Task](https://taskfile.dev/installation/) and Python 3.
+
+```bash
+task check       # validate spec + conformance
+task test        # run test suite (23 tests)
+```
+
+First run creates a virtual environment and installs dependencies
+automatically.
+
+Without Task:
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python scripts/validate_spec.py
+```
+
 ## Structure
 
 ```
 spec/
-  _schema.yaml         — Requirement format definition
-  architecture.yaml    — 4-layer architecture
-  enforcement.yaml     — Automated enforcement
-  testing.yaml         — TDD, coverage, DI
+  _schema.yaml             — Requirement format definition
+  01-architecture.yaml     — 4-layer architecture
+  02-enforcement.yaml      — Automated enforcement
+  03-testing.yaml          — TDD, coverage, DI
 conformance/
-  ckeletin-go.yaml     — Go conformance report
-principles.md          — The why behind everything
+  ckeletin-go.yaml         — Go conformance report
+principles.md              — The why behind everything
 ```
 
 ## Conformance Language
