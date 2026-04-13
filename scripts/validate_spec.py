@@ -136,3 +136,95 @@ def validate_conformance_coverage(spec_ids, conformance_ids, filename):
     for oid in sorted(orphaned_in_conformance):
         errors.append(f"{filename}: conformance ID '{oid}' has no matching spec requirement")
     return errors
+
+
+def validate_all(spec_dir, conformance_dir):
+    """Run all validation checks. Returns list of all errors."""
+    all_errors = []
+
+    spec_files = sorted(
+        f for f in os.listdir(spec_dir)
+        if f.endswith(".yaml") and not f.startswith("_")
+    )
+    all_ids = []
+
+    for fname in spec_files:
+        path = os.path.join(spec_dir, fname)
+        data = load_spec_file(path)
+        if data is None:
+            all_errors.append(f"{fname}: failed to parse YAML")
+            continue
+
+        all_errors.extend(validate_domain_fields(data, fname))
+
+        for req in data.get("requirements", []):
+            all_errors.extend(validate_requirement_fields(req, fname))
+            if "id" in req:
+                all_errors.extend(validate_id_format(req["id"]))
+                all_ids.append((req["id"], fname))
+            if "level" in req:
+                all_errors.extend(validate_level(req["level"]))
+
+    all_errors.extend(validate_id_uniqueness(all_ids))
+
+    spec_id_set = {sid for sid, _ in all_ids}
+
+    conformance_files = sorted(
+        f for f in os.listdir(conformance_dir)
+        if f.endswith(".yaml")
+    )
+
+    for fname in conformance_files:
+        path = os.path.join(conformance_dir, fname)
+        data = load_spec_file(path)
+        if data is None:
+            all_errors.append(f"{fname}: failed to parse YAML")
+            continue
+
+        all_errors.extend(validate_conformance_header(data, fname))
+
+        conformance_ids = set()
+        for req_id, entry in data.get("requirements", {}).items():
+            conformance_ids.add(req_id)
+            all_errors.extend(validate_conformance_entry(req_id, entry, fname))
+
+        all_errors.extend(
+            validate_conformance_coverage(spec_id_set, conformance_ids, fname)
+        )
+
+    return all_errors
+
+
+def main():
+    """CLI entry point — run all validation, print results, exit 0/1."""
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    spec_dir = os.path.join(repo_root, "spec")
+    conformance_dir = os.path.join(repo_root, "conformance")
+
+    print("Validating ckeletin spec...")
+    print()
+
+    errors = validate_all(spec_dir, conformance_dir)
+
+    if errors:
+        print(f"FAILED — {len(errors)} error(s):\n")
+        for err in errors:
+            print(f"  - {err}")
+        sys.exit(1)
+    else:
+        spec_count = len([
+            f for f in os.listdir(spec_dir)
+            if f.endswith(".yaml") and not f.startswith("_")
+        ])
+        id_count = len(collect_all_ids(spec_dir))
+        conformance_count = len([
+            f for f in os.listdir(conformance_dir)
+            if f.endswith(".yaml")
+        ])
+        print(f"PASSED — {spec_count} spec files, {id_count} requirements, "
+              f"{conformance_count} conformance report(s)")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
