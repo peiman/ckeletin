@@ -121,14 +121,20 @@ requirements:
     title: Violation tests for enforcement claims
     level: MUST
     since: v0.3.0
+    modified: v0.4.0
     checkable: true
     description: >
       Enforcement claims above honor-system in conformance reports
-      MUST be accompanied by a violation test — a test that introduces
-      a known violation and verifies the enforcement mechanism catches
-      it. If a violation test cannot be written, the enforcement level
-      MUST be reported as honor-system regardless of the intended
-      mechanism.
+      MUST be accompanied by proof that the enforcement mechanism
+      works. The preferred proof is a violation test — a test that
+      introduces a known violation and verifies the enforcement
+      mechanism catches it. When a violation test is not feasible
+      (structural or tooling-enforced enforcement), a
+      violation_evidence field referencing the specific file(s)
+      that constitute the enforcement is an acceptable alternative.
+      If neither a violation test nor violation evidence can be
+      provided, the enforcement level MUST be reported as
+      honor-system.
     rationale: >
       Truth-Seeking (Principle 1) requires evidence, not claims.
       Stating that a linter catches a violation without demonstrating
@@ -136,13 +142,34 @@ requirements:
       (Principle 2) demands that we verify our assumptions about
       what our tools actually catch. A conformance report that says
       "met at linter level" without a violation test is a hypothesis,
-      not a fact.
+      not a fact. However, some enforcement mechanisms are provably
+      real without a test file — a Cargo.toml that omits a dependency
+      makes reverse imports structurally impossible. Requiring
+      honor-system for structural enforcement would be dishonest —
+      the enforcement is stronger than honor-system, and the report
+      should say so. But violation_evidence is not a first resort:
+      ckeletin-go initially classified ENF-006 as untestable, then
+      found a real violation test after trying harder. Explore tests
+      thoroughly before reaching for evidence.
     notes: >
       Violation tests verify the enforcement mechanism, not the
       requirement itself. A violation test for CKSPEC-ARCH-002 does
       not test that dependencies flow correctly — it tests that
       introducing a reverse dependency is caught by the enforcement
       tool. This is meta-testing: testing the tests.
+
+      Two categories of enforcement where violation tests are not
+      feasible: (1) structural — the enforcement IS the architecture
+      (build config, dependency graph), not a runtime check,
+      (2) tooling-enforced — enforcement wraps the codebase from
+      outside (CI, hooks, toolchain). Originally proposed with four
+      categories (adding self-referential and destructive-to-test);
+      narrowed after ckeletin-go proved ENF-006 — initially
+      classified as self-referential — was testable via a mapping
+      consistency check. The lesson: try harder before reaching for
+      violation_evidence. Discovered and refined through
+      cross-implementation feedback between ckeletin-go and
+      ckeletin-rust. See: Principle 10 (Feedback Cycle).
 
   - id: CKSPEC-ENF-007
     title: Automatic feedback signals

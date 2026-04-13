@@ -111,9 +111,23 @@ conformance_entry:
       required: false
       description: >
         Path to a test that introduces a known violation and verifies
-        the enforcement mechanism catches it. Required for enforcement
-        claims above honor-system — without a violation test, the
-        enforcement level is unverified.
+        the enforcement mechanism catches it. Preferred proof for
+        enforcement claims above honor-system. Either violation_test
+        or violation_evidence is required for claims above
+        honor-system — without either, the enforcement level is
+        unverified.
+    violation_evidence:
+      type: string
+      required: false
+      description: >
+        For enforcement claims where a violation test file is not
+        feasible (structural or tooling-enforced enforcement), an
+        explanation referencing the specific file(s) that constitute
+        the enforcement. Must include at least one file path.
+        Accepted as alternative proof when violation_test is empty
+        and enforcement_level is above honor-system. Not a
+        substitute for trying harder — explore violation tests
+        thoroughly before reaching for this field.
     notes:
       type: string
       required: false
