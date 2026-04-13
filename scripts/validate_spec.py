@@ -138,8 +138,39 @@ def validate_conformance_coverage(spec_ids, conformance_ids, filename):
     return errors
 
 
+def collect_conformance_warnings(conformance_dir):
+    """Collect warnings for deferred, not-met, and partial conformance entries.
+
+    These are not errors — the report is valid — but they must be visible
+    so incomplete work doesn't hide behind a green check.
+    """
+    warnings = []
+    conformance_files = sorted(
+        f for f in os.listdir(conformance_dir)
+        if f.endswith(".yaml")
+    )
+    for fname in conformance_files:
+        path = os.path.join(conformance_dir, fname)
+        data = load_spec_file(path)
+        if data is None:
+            continue
+        impl_name = data.get("implementation", fname)
+        reqs = data.get("requirements", {})
+        if not isinstance(reqs, dict):
+            continue
+        for req_id, entry in reqs.items():
+            status = entry.get("status", "")
+            if status == "deferred":
+                warnings.append(f"{impl_name}: {req_id} is deferred")
+            elif status == "not-met":
+                warnings.append(f"{impl_name}: {req_id} is not met")
+            elif status == "partial":
+                warnings.append(f"{impl_name}: {req_id} is partial")
+    return warnings
+
+
 def validate_all(spec_dir, conformance_dir):
-    """Run all validation checks. Returns list of all errors."""
+    """Run all validation checks. Returns (errors, warnings)."""
     all_errors = []
 
     spec_files = sorted(
@@ -192,7 +223,9 @@ def validate_all(spec_dir, conformance_dir):
             validate_conformance_coverage(spec_id_set, conformance_ids, fname)
         )
 
-    return all_errors
+    all_warnings = collect_conformance_warnings(conformance_dir)
+
+    return all_errors, all_warnings
 
 
 def main():
@@ -204,7 +237,7 @@ def main():
     print("Validating ckeletin spec...")
     print()
 
-    errors = validate_all(spec_dir, conformance_dir)
+    errors, warnings = validate_all(spec_dir, conformance_dir)
 
     if errors:
         print(f"FAILED — {len(errors)} error(s):\n")
@@ -223,6 +256,12 @@ def main():
         ])
         print(f"PASSED — {spec_count} spec files, {id_count} requirements, "
               f"{conformance_count} conformance report(s)")
+
+        if warnings:
+            print(f"\n⚠ {len(warnings)} conformance warning(s):\n")
+            for warn in warnings:
+                print(f"  - {warn}")
+
         sys.exit(0)
 
 
