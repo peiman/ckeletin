@@ -1,0 +1,99 @@
+# spec/05-agent-readiness.yaml
+# Agent readiness requirements for ckeletin-conformant CLI projects.
+
+domain:
+  name: Agent Readiness
+  description: >
+    How CLI projects communicate with AI agents. Universal project
+    knowledge in a single guide, provider-specific behavioral tuning
+    in dedicated files, and the CLI as the machine interface. No
+    protocol layers required — the output domain provides the
+    machine-readable responses, this domain provides the knowledge.
+
+requirements:
+  - id: CKSPEC-AGENT-001
+    title: Universal agent guide
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      Projects MUST have an AGENTS.md file containing all project
+      knowledge that any AI agent needs: architecture, commands,
+      conventions, code organization, testing strategy, and
+      troubleshooting. This file is the single source of project
+      truth for agents.
+    rationale: >
+      Single Source of Truth (Principle 7) — one file, all project
+      knowledge. Without a universal guide, each agent explores,
+      reads, and guesses independently. A structured guide ensures
+      consistent, correct behavior regardless of which agent is used.
+
+  - id: CKSPEC-AGENT-002
+    title: No provider-specific content in universal guide
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      AGENTS.md MUST NOT contain instructions specific to any single
+      LLM provider. No Claude-specific rules, no Gemini-specific
+      formatting, no Copilot-specific behaviors. Provider-specific
+      content belongs in dedicated files.
+    rationale: >
+      Separation of Concerns (Principle 8) — universal knowledge
+      and provider-specific behavior are different concerns. Mixing
+      them creates confusion where agents follow instructions
+      intended for a different LLM.
+
+  - id: CKSPEC-AGENT-003
+    title: Provider-specific guides follow provider guidance
+    level: SHOULD
+    since: v0.2.0
+    checkable: false
+    description: >
+      When targeting specific LLMs, projects SHOULD create dedicated
+      guide files (e.g., CLAUDE.md, GEMINI.md). These files SHOULD
+      follow the respective provider's published optimization
+      guidance. Provider-specific guides MUST reference AGENTS.md
+      for project knowledge rather than duplicating it.
+    rationale: >
+      Each LLM processes instructions differently. Following
+      provider guidance produces better results than a generic
+      format. Single Source of Truth (Principle 7) — provider files
+      add behavioral rules, not duplicate knowledge.
+
+  - id: CKSPEC-AGENT-004
+    title: Agent guide completeness
+    level: SHOULD
+    since: v0.2.0
+    checkable: false
+    description: >
+      AGENTS.md SHOULD contain enough information for an agent to
+      perform common tasks without reading additional documentation.
+      At minimum: project purpose, directory structure, key commands
+      (build, test, check), coding conventions, and troubleshooting.
+    rationale: >
+      Lean Iteration (Principle 4) — front-loading knowledge
+      reduces agent exploration time and error rates. An agent that
+      must discover project conventions through trial and error
+      wastes tokens and makes mistakes. A complete guide makes the
+      agent effective immediately.
+
+  - id: CKSPEC-AGENT-005
+    title: CLI as the agent interface
+    level: MUST
+    since: v0.2.0
+    checkable: false
+    description: >
+      The CLI MUST be the primary interface for agent interaction.
+      Agents run commands and parse responses (using the machine-
+      readable output mode from CKSPEC-OUT-002). Protocol layers
+      (MCP, custom APIs) MAY be provided as supplements but MUST
+      NOT be required for agent operation. An agent with shell
+      access and AGENTS.md MUST be able to use the project fully.
+    rationale: >
+      Lean Iteration (Principle 4) — the CLI is the simplest
+      interface that works. Adding protocol layers for tools that
+      already have CLIs adds complexity without capability.
+      Platforms, Not Features (Principle 5) — the CLI and structured
+      output are the platform; protocol wrappers are optional
+      features built on that platform.

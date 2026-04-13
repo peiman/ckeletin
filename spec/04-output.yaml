@@ -1,0 +1,101 @@
+# spec/04-output.yaml
+# Structured output requirements for ckeletin-conformant CLI projects.
+
+domain:
+  name: Output
+  description: >
+    Three-stream output model with machine-readable mode and shadow
+    logging. Ensures CLI projects serve both human and machine
+    consumers — users get formatted text, agents get parseable JSON,
+    and the audit trail captures everything.
+
+requirements:
+  - id: CKSPEC-OUT-001
+    title: Three-stream output separation
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      Projects MUST separate output into three streams: (1) Data
+      stream to stdout — the product of the command, (2) Status
+      stream to stderr — progress, warnings, operational messages,
+      (3) Audit stream to log file — full structured trace of what
+      happened. These streams MUST NOT be mixed. Stdout MUST contain
+      only the command's result, never log messages or progress text.
+    rationale: >
+      Separation of Concerns (Principle 8) applied to output.
+      Mixing streams breaks shell pipelines (log messages in stdout),
+      makes machine parsing unreliable (progress text interleaved
+      with results), and loses audit context (user output is too
+      brief for debugging). Three streams serve three audiences
+      without compromise.
+
+  - id: CKSPEC-OUT-002
+    title: Machine-readable output mode
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      Every command MUST support a machine-readable output mode
+      activated via flag or configuration. When active, stdout MUST
+      emit structured data (JSON or equivalent) instead of formatted
+      text. The status stream (stderr) SHOULD be silenced in machine
+      mode to produce clean parseable output.
+    rationale: >
+      Lean Iteration (Principle 4) — the CLI is the API. Agents,
+      scripts, and CI pipelines need parseable responses without
+      building protocol layers. A flag is simpler than a server.
+      Truth-Seeking (Principle 1) — structured output is unambiguous,
+      unlike human-formatted text that requires pattern matching.
+
+  - id: CKSPEC-OUT-003
+    title: Standardized output envelope
+    level: SHOULD
+    since: v0.2.0
+    checkable: true
+    description: >
+      Machine-readable output SHOULD use a standardized envelope
+      with at minimum: status (success or error), command identifier,
+      data payload (null on error), and error details (null on
+      success). Commands MAY customize the data payload shape but
+      the envelope structure SHOULD be consistent across all commands.
+    rationale: >
+      Single Source of Truth (Principle 7) — one envelope format
+      means consumers learn the structure once. Platforms, Not
+      Features (Principle 5) — a standard envelope is a platform
+      that tooling, agents, and scripts build on.
+
+  - id: CKSPEC-OUT-004
+    title: Shadow logging
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      Every user-facing output operation MUST simultaneously log
+      the raw data to the audit stream (log file). The audit log
+      MUST contain at least the data that was rendered to the user,
+      plus structured metadata (timestamp, command, log level). The
+      audit stream is always active regardless of output mode.
+    rationale: >
+      Truth-Seeking (Principle 1) — the audit log is the evidence
+      of what happened. When debugging agent interactions or
+      investigating failures, the user-visible output is often too
+      brief. Shadow logging ensures the full context is always
+      recoverable without requiring verbose mode.
+
+  - id: CKSPEC-OUT-005
+    title: Output isolation from business logic
+    level: MUST
+    since: v0.2.0
+    checkable: true
+    description: >
+      Business logic MUST NOT write directly to stdout or stderr.
+      All output MUST go through a rendering layer that handles
+      format selection (human text vs machine-readable), shadow
+      logging, and stream routing. This ensures that adding machine-
+      readable output requires zero changes to business logic.
+    rationale: >
+      Separation of Concerns (Principle 8) — business logic produces
+      data, the rendering layer formats it. Automated Enforcement
+      (Principle 9) — this is checkable by static analysis (detect
+      direct print/stdout usage in business logic packages).

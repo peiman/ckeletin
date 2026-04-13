@@ -9,8 +9,20 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
+- Output domain (CKSPEC-OUT-001 to 005) — 3-stream model, JSON mode, shadow logging, output isolation
+- Agent Readiness domain (CKSPEC-AGENT-001 to 005) — AGENTS.md, provider guides, CLI as agent interface
 - changie integration for changelog management — enforces CKSPEC-CL requirements
 - Taskfile changelog and release commands (task changelog:added, task release)
+
+### Changed
+
+- Principles restructured — derives from [Manifesto](https://github.com/peiman/manifesto)
+- Added Curiosity Over Certainty, Good Will, Partnership to principles
+- Folded Framework Independence into Separation of Concerns
+- Folded Two-Implementation Rule into Feedback Cycle
+- Principles organized into tiers: Foundation → Method → Design → Process
+- Changelog domain reordered from 04 to 06 (nothing depends on it)
+- Spec domains now follow platform dependency chain
 
 ## [0.1.2] - 2026-04-13
 

@@ -5,8 +5,8 @@
 # at /Users/peiman/dev/cli/ckeletin-go/ on 2026-04-12.
 
 implementation: ckeletin-go
-spec_version: "0.1.0"
-report_date: "2026-04-12"
+spec_version: "0.2.0"
+report_date: "2026-04-13"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -296,3 +296,102 @@ requirements:
       Reference-style comparison links at bottom of CHANGELOG.md
       for all 12 versions (0.0.1 through Unreleased). Each links
       to GitHub compare URL between consecutive tags.
+
+  # ---------------------------------------------------------------------------
+  # Output (CKSPEC-OUT-001 through CKSPEC-OUT-005)
+  # Evidence from ADR-013, validate-output-patterns.sh, renderer.go, json.go
+  # ---------------------------------------------------------------------------
+
+  CKSPEC-OUT-001:
+    status: met
+    evidence: >
+      ADR-013 defines the 3-stream model: Data to stdout (user output
+      via internal/ui), Status to stderr (zerolog console output),
+      Audit to log file (zerolog JSON file output). Logger configured
+      to write console to stderr, file to JSON.
+    tests: ["task validate:output"]
+
+  CKSPEC-OUT-002:
+    status: met
+    evidence: >
+      --output json flag supported on all commands. Implemented via
+      output.IsJSONMode() check in internal/ui/renderer.go. When
+      active, RenderSuccess emits JSONEnvelope to stdout. Stderr
+      logging disabled in JSON mode.
+    tests: []
+
+  CKSPEC-OUT-003:
+    status: met
+    evidence: >
+      Standard envelope in .ckeletin/pkg/output/json.go: JSONEnvelope
+      struct with Status, Command, Data, Error fields. JSONResponder
+      interface allows commands to customize Data payload shape.
+      RenderJSON marshals envelope to writer.
+    tests: []
+
+  CKSPEC-OUT-004:
+    status: met
+    evidence: >
+      internal/ui/renderer.go RenderSuccess performs shadow logging:
+      log.Info() with "data" interface field writes raw struct to
+      audit log, while formatted text goes to stdout. Both happen
+      in the same function call. Audit stream always active.
+    tests: []
+
+  CKSPEC-OUT-005:
+    status: met
+    evidence: >
+      validate-output-patterns.sh detects fmt.Print* and os.Stdout
+      usage in internal/* (excluding internal/ui/ and tests). Business
+      logic must use internal/ui for Data stream and internal/logger
+      for Status stream. Enforced via task check.
+    tests: ["task validate:output"]
+
+  # ---------------------------------------------------------------------------
+  # Agent Readiness (CKSPEC-AGENT-001 through CKSPEC-AGENT-005)
+  # Evidence from AGENTS.md, CLAUDE.md, --output json support
+  # ---------------------------------------------------------------------------
+
+  CKSPEC-AGENT-001:
+    status: met
+    evidence: >
+      AGENTS.md exists (358 lines). Covers: project purpose, directory
+      structure, all task commands, coding conventions, ADR lookup,
+      testing strategy, license compliance, troubleshooting, cascading
+      failure resolution order.
+    tests: []
+
+  CKSPEC-AGENT-002:
+    status: met
+    evidence: >
+      AGENTS.md header: "Project Guide for AI Agents" (universal).
+      Contains no Claude-specific, Gemini-specific, or Copilot-
+      specific instructions. All provider-specific content is in
+      separate files.
+    tests: []
+
+  CKSPEC-AGENT-003:
+    status: met
+    evidence: >
+      CLAUDE.md exists with Claude-specific behavioral rules. Line 1:
+      "Read AGENTS.md first — it contains all project knowledge."
+      No project knowledge duplicated. .cursorrules and
+      .github/copilot-instructions.md also reference AGENTS.md.
+    tests: []
+
+  CKSPEC-AGENT-004:
+    status: met
+    evidence: >
+      AGENTS.md is self-sufficient: project purpose, full directory
+      tree, all task commands with descriptions, coding conventions
+      (config, logging, testing, JSON output), ADR table with quick
+      lookup, git workflow, troubleshooting with cascading fix order.
+    tests: []
+
+  CKSPEC-AGENT-005:
+    status: met
+    evidence: >
+      CLI is the primary interface. All operations via task commands
+      or direct go commands. --output json flag provides machine-
+      readable responses. No MCP or protocol layer required for
+      agent operation. AGENTS.md + shell access is sufficient.

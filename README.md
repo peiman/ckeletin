@@ -15,22 +15,24 @@ retrospectives, not audits.
 
 ## Current State
 
-Four domains, verified against one implementation:
+Six domains, verified against one implementation:
 
-| Domain | Requirements | What it covers |
-|--------|-------------|----------------|
-| Architecture | CKSPEC-ARCH-001 to 007 | 4-layer architecture, dependency rules |
-| Enforcement | CKSPEC-ENF-001 to 004 | Every decision must be enforced |
-| Testing | CKSPEC-TEST-001 to 004 | TDD, coverage, dependency injection |
-| Changelog | CKSPEC-CL-001 to 007 | Keep a Changelog, SemVer, human-curated |
+| # | Domain | Requirements | Platform it creates |
+|---|--------|-------------|---------------------|
+| 01 | Architecture | CKSPEC-ARCH-001 to 007 | Code organization, layer boundaries |
+| 02 | Enforcement | CKSPEC-ENF-001 to 004 | Every rule is automated |
+| 03 | Testing | CKSPEC-TEST-001 to 004 | Correctness is verified |
+| 04 | Output | CKSPEC-OUT-001 to 005 | Machines can parse responses |
+| 05 | Agent Readiness | CKSPEC-AGENT-001 to 005 | Any agent can use the project |
+| 06 | Changelog | CKSPEC-CL-001 to 007 | Changes are communicated |
 
-More domains added as ckeletin-rust needs them.
+Each domain is a platform for the ones after it. The order matters.
 
 ## Implementations
 
 | Implementation | Language | Conformance |
 |---------------|----------|-------------|
-| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 22/22 met |
+| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 32/32 met |
 | ckeletin-rust | Rust | Planned |
 
 ## Validation
@@ -73,11 +75,13 @@ spec/
   01-architecture.yaml     — 4-layer architecture
   02-enforcement.yaml      — Automated enforcement
   03-testing.yaml          — TDD, coverage, DI
-  04-changelog.yaml        — Changelog format and practices
+  04-output.yaml           — 3-stream model, JSON, shadow logging
+  05-agent-readiness.yaml  — AGENTS.md, provider guides, CLI interface
+  06-changelog.yaml        — Keep a Changelog, SemVer
 conformance/
   ckeletin-go.yaml         — Go conformance report
 research/                  — Source research behind requirements
-principles.md              — The why behind everything
+principles.md              — Derives from the Manifesto
 ```
 
 ## Conformance Language
@@ -95,4 +99,6 @@ satisfy it.
 
 ## Principles
 
-See [principles.md](principles.md).
+Derives from the [Manifesto](https://github.com/peiman/manifesto).
+See [principles.md](principles.md) for how the manifesto applies to
+CLI scaffold specifications.
