@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
+- Machine-readable requirement list (spec/requirements.json) — generated from spec YAMLs, validated by task check, replaces hardcoded ID lists in conformance generators
+- task generate:requirements command — produces requirements.json from the authoritative YAML source
+- Sync validation in task check — regenerates requirements.json in memory and fails if the on-disk copy has drifted
+- 13 new tests for requirements generation, version derivation, and sync validation
 - Conformance cycle requirements (CKSPEC-ENF-005 to 007) — mapping completeness, violation tests, automatic feedback signals
 - enforcement_level field on conformance_entry schema — makes enforcement ladder visible in conformance data
 - violation_test field on conformance_entry schema — links enforcement claims to proof

@@ -1,5 +1,6 @@
 """Ckeletin spec validation — enforces the spec's own rules."""
 
+import json
 import os
 import re
 import sys
@@ -87,6 +88,102 @@ def validate_id_uniqueness(id_list):
             )
         else:
             seen[req_id] = fname
+    return errors
+
+
+def collect_all_requirements(directory):
+    """Collect full requirement metadata from spec files.
+
+    Returns list of dicts sorted by ID with fields: id, title, level,
+    checkable, domain, since, and optionally modified.
+    """
+    requirements = []
+    for fname in sorted(os.listdir(directory)):
+        if not fname.endswith(".yaml") or fname.startswith("_"):
+            continue
+        path = os.path.join(directory, fname)
+        data = load_spec_file(path)
+        if data is None:
+            continue
+        domain_name = data.get("domain", {}).get("name", "")
+        for req in data.get("requirements", []):
+            if "id" not in req:
+                continue
+            entry = {
+                "id": req["id"],
+                "title": req.get("title", ""),
+                "level": req.get("level", ""),
+                "checkable": req.get("checkable", False),
+                "domain": domain_name,
+                "since": req.get("since", ""),
+            }
+            if "modified" in req:
+                entry["modified"] = req["modified"]
+            requirements.append(entry)
+    requirements.sort(key=lambda r: r["id"])
+    return requirements
+
+
+def _parse_version(version_str):
+    """Parse 'vX.Y.Z' to tuple for comparison."""
+    return tuple(int(x) for x in version_str.lstrip("v").split("."))
+
+
+def _derive_spec_version(requirements):
+    """Derive spec version from highest since/modified across all requirements."""
+    versions = set()
+    for req in requirements:
+        if req.get("since"):
+            versions.add(req["since"])
+        if req.get("modified"):
+            versions.add(req["modified"])
+    if not versions:
+        return "0.0.0"
+    highest = max(versions, key=_parse_version)
+    return highest.lstrip("v")
+
+
+def generate_requirements_data(spec_dir):
+    """Generate the requirements.json data structure from spec YAML files.
+
+    Returns a dict with spec_version and sorted requirements list.
+    """
+    requirements = collect_all_requirements(spec_dir)
+    spec_version = _derive_spec_version(requirements)
+
+    return {
+        "spec_version": spec_version,
+        "requirements": requirements,
+    }
+
+
+def validate_requirements_json_sync(spec_dir):
+    """Check that spec/requirements.json matches the spec YAML files.
+
+    Returns list of errors.
+    """
+    errors = []
+    json_path = os.path.join(spec_dir, "requirements.json")
+
+    if not os.path.exists(json_path):
+        errors.append(
+            "spec/requirements.json does not exist"
+            " — run 'task generate:requirements'"
+        )
+        return errors
+
+    expected = generate_requirements_data(spec_dir)
+    expected_json = json.dumps(expected, indent=2) + "\n"
+
+    with open(json_path, "r") as f:
+        actual_json = f.read()
+
+    if actual_json != expected_json:
+        errors.append(
+            "spec/requirements.json is out of sync with spec YAML files"
+            " — run 'task generate:requirements'"
+        )
+
     return errors
 
 
@@ -197,6 +294,8 @@ def validate_all(spec_dir, conformance_dir):
                 all_errors.extend(validate_level(req["level"]))
 
     all_errors.extend(validate_id_uniqueness(all_ids))
+
+    all_errors.extend(validate_requirements_json_sync(spec_dir))
 
     spec_id_set = {sid for sid, _ in all_ids}
 

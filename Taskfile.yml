@@ -20,6 +20,13 @@ tasks:
     cmds:
       - '{{.PYTHON}} scripts/validate_spec.py'
 
+  generate:requirements:
+    desc: Generate spec/requirements.json from spec YAML files
+    deps: [setup]
+    cmds:
+      - '{{.PYTHON}} scripts/generate_requirements.py'
+      - '{{.PYTHON}} scripts/validate_spec.py'
+
   test:
     desc: Run validation tests
     deps: [setup]

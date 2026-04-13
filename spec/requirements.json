@@ -1,0 +1,288 @@
+{
+  "spec_version": "0.4.0",
+  "requirements": [
+    {
+      "id": "CKSPEC-AGENT-001",
+      "title": "Universal agent guide",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Agent Readiness",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-002",
+      "title": "No provider-specific content in universal guide",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Agent Readiness",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-003",
+      "title": "Provider-specific guides follow provider guidance",
+      "level": "SHOULD",
+      "checkable": false,
+      "domain": "Agent Readiness",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-004",
+      "title": "Agent guide completeness",
+      "level": "SHOULD",
+      "checkable": false,
+      "domain": "Agent Readiness",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-005",
+      "title": "CLI as the agent interface",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Agent Readiness",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-001",
+      "title": "Four-layer architecture",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-002",
+      "title": "Directed dependencies",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-003",
+      "title": "CLI framework isolation",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-004",
+      "title": "Business logic isolation",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0",
+      "modified": "v0.3.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-005",
+      "title": "Infrastructure independence",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-006",
+      "title": "Entry point minimality",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ARCH-007",
+      "title": "Package location enforcement",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Architecture",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-CL-001",
+      "title": "CHANGELOG.md in repository root",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-002",
+      "title": "Keep a Changelog format",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-003",
+      "title": "ISO 8601 dates",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-004",
+      "title": "Semantic Versioning",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-005",
+      "title": "Unreleased section",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-006",
+      "title": "Human-curated, not auto-generated",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-CL-007",
+      "title": "Version comparison links",
+      "level": "SHOULD",
+      "checkable": true,
+      "domain": "Changelog",
+      "since": "v0.1.2"
+    },
+    {
+      "id": "CKSPEC-ENF-001",
+      "title": "Automated enforcement required",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Enforcement",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ENF-002",
+      "title": "Enforcement ladder",
+      "level": "SHOULD",
+      "checkable": false,
+      "domain": "Enforcement",
+      "since": "v0.1.0",
+      "modified": "v0.3.0"
+    },
+    {
+      "id": "CKSPEC-ENF-003",
+      "title": "Document enforcement gaps",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ENF-004",
+      "title": "Enforcement audit table",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-ENF-005",
+      "title": "Conformance mapping completeness",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.3.0"
+    },
+    {
+      "id": "CKSPEC-ENF-006",
+      "title": "Violation tests for enforcement claims",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.3.0",
+      "modified": "v0.4.0"
+    },
+    {
+      "id": "CKSPEC-ENF-007",
+      "title": "Automatic feedback signals",
+      "level": "SHOULD",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.3.0"
+    },
+    {
+      "id": "CKSPEC-OUT-001",
+      "title": "Three-stream output separation",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Output",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-OUT-002",
+      "title": "Machine-readable output mode",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Output",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-OUT-003",
+      "title": "Standardized output envelope",
+      "level": "SHOULD",
+      "checkable": true,
+      "domain": "Output",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-OUT-004",
+      "title": "Shadow logging",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Output",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-OUT-005",
+      "title": "Output isolation from business logic",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Output",
+      "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-TEST-001",
+      "title": "Test-driven development",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Testing",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-TEST-002",
+      "title": "Minimum coverage threshold",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Testing",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-TEST-003",
+      "title": "Dependency injection over mocking",
+      "level": "SHOULD",
+      "checkable": false,
+      "domain": "Testing",
+      "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-TEST-004",
+      "title": "Atomic test commits",
+      "level": "MUST",
+      "checkable": false,
+      "domain": "Testing",
+      "since": "v0.1.0"
+    }
+  ]
+}

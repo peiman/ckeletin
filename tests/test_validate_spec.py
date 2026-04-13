@@ -1,4 +1,6 @@
+import json
 import os
+import tempfile
 import pytest
 from scripts.validate_spec import (
     load_spec_file,
@@ -12,6 +14,11 @@ from scripts.validate_spec import (
     validate_conformance_entry,
     validate_conformance_coverage,
     collect_conformance_warnings,
+    collect_all_requirements,
+    generate_requirements_data,
+    validate_requirements_json_sync,
+    _parse_version,
+    _derive_spec_version,
     REQUIRED_DOMAIN_FIELDS,
     REQUIRED_REQUIREMENT_FIELDS,
     REQUIRED_CONFORMANCE_HEADER_FIELDS,
@@ -249,3 +256,106 @@ class TestConformanceWarnings:
             f"Expected at least 3 deferred warnings (ENF-005/006/007), "
             f"got {len(deferred)}: {deferred}"
         )
+
+
+class TestRequirementsGeneration:
+    def test_collect_all_requirements_count(self, spec_dir):
+        """Must collect all 35 requirements from spec files."""
+        reqs = collect_all_requirements(spec_dir)
+        assert len(reqs) == 35, f"Expected 35 requirements, got {len(reqs)}"
+
+    def test_collect_all_requirements_has_required_fields(self, spec_dir):
+        """Every collected requirement must have id, title, level, checkable, domain, since."""
+        reqs = collect_all_requirements(spec_dir)
+        required_keys = {"id", "title", "level", "checkable", "domain", "since"}
+        for req in reqs:
+            missing = required_keys - set(req.keys())
+            assert missing == set(), f"{req['id']}: missing keys {missing}"
+
+    def test_collect_all_requirements_sorted_by_id(self, spec_dir):
+        """Requirements must be sorted alphabetically by ID."""
+        reqs = collect_all_requirements(spec_dir)
+        ids = [r["id"] for r in reqs]
+        assert ids == sorted(ids), "Requirements must be sorted by ID"
+
+    def test_collect_all_requirements_domains_populated(self, spec_dir):
+        """Every requirement must have a non-empty domain name."""
+        reqs = collect_all_requirements(spec_dir)
+        for req in reqs:
+            assert req["domain"] != "", f"{req['id']}: domain must not be empty"
+
+    def test_parse_version(self):
+        """Version strings parse to comparable tuples."""
+        assert _parse_version("v0.1.0") == (0, 1, 0)
+        assert _parse_version("v1.2.3") == (1, 2, 3)
+        assert _parse_version("v0.1.0") < _parse_version("v0.2.0")
+        assert _parse_version("v0.4.0") > _parse_version("v0.3.0")
+
+    def test_derive_spec_version(self):
+        """Spec version is the highest since/modified across requirements."""
+        reqs = [
+            {"since": "v0.1.0"},
+            {"since": "v0.2.0", "modified": "v0.4.0"},
+            {"since": "v0.3.0"},
+        ]
+        assert _derive_spec_version(reqs) == "0.4.0"
+
+    def test_derive_spec_version_empty(self):
+        """Empty requirements list produces version 0.0.0."""
+        assert _derive_spec_version([]) == "0.0.0"
+
+    def test_generate_requirements_data_structure(self, spec_dir):
+        """Generated data must have spec_version and requirements list."""
+        data = generate_requirements_data(spec_dir)
+        assert "spec_version" in data
+        assert "requirements" in data
+        assert isinstance(data["requirements"], list)
+        assert len(data["requirements"]) == 35
+
+    def test_generate_requirements_data_spec_version(self, spec_dir):
+        """Spec version must match highest version in requirements."""
+        data = generate_requirements_data(spec_dir)
+        # v0.4.0 is the highest (CKSPEC-ENF-006 modified: v0.4.0)
+        assert data["spec_version"] == "0.4.0"
+
+    def test_generate_requirements_data_deterministic(self, spec_dir):
+        """Two calls must produce identical output."""
+        data1 = generate_requirements_data(spec_dir)
+        data2 = generate_requirements_data(spec_dir)
+        assert json.dumps(data1) == json.dumps(data2)
+
+    def test_requirements_json_in_sync(self, spec_dir):
+        """spec/requirements.json must match generated output."""
+        errors = validate_requirements_json_sync(spec_dir)
+        assert errors == [], (
+            f"requirements.json out of sync: {errors}. "
+            "Run 'task generate:requirements' to fix."
+        )
+
+    def test_requirements_json_missing_detected(self):
+        """Missing requirements.json must produce an error."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            errors = validate_requirements_json_sync(tmpdir)
+            assert len(errors) == 1
+            assert "does not exist" in errors[0]
+
+    def test_requirements_json_stale_detected(self, spec_dir):
+        """Stale requirements.json must produce an error."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Copy a spec file into tmpdir
+            import shutil
+            import yaml
+
+            src = os.path.join(spec_dir, "01-architecture.yaml")
+            shutil.copy2(src, os.path.join(tmpdir, "01-architecture.yaml"))
+
+            # Write a requirements.json with wrong content
+            stale = {"spec_version": "0.0.0", "requirements": []}
+            json_path = os.path.join(tmpdir, "requirements.json")
+            with open(json_path, "w") as f:
+                json.dump(stale, f, indent=2)
+                f.write("\n")
+
+            errors = validate_requirements_json_sync(tmpdir)
+            assert len(errors) == 1
+            assert "out of sync" in errors[0]
