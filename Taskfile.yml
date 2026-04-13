@@ -4,13 +4,13 @@ tasks:
   check:
     desc: Run all spec validation checks
     cmds:
-      - python scripts/validate_spec.py
+      - python3 scripts/validate_spec.py
     silent: false
 
   test:
     desc: Run validation tests
     cmds:
-      - python -m pytest tests/ -v
+      - python3 -m pytest tests/ -v
     silent: false
 
   setup:
