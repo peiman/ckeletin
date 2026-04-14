@@ -249,12 +249,13 @@ class TestConformanceWarnings:
             assert warnings == [], f"Should have no warnings, got: {warnings}"
 
     def test_real_conformance_warnings_visible(self, conformance_dir):
-        """Real conformance report's deferred entries produce warnings."""
+        """Real conformance reports' non-met entries produce warnings."""
         warnings = collect_conformance_warnings(conformance_dir)
-        deferred = [w for w in warnings if "deferred" in w]
-        assert len(deferred) >= 3, (
-            f"Expected at least 3 deferred warnings (ENF-005/006/007), "
-            f"got {len(deferred)}: {deferred}"
+        # ckeletin-rust has partial entries; ckeletin-go is 35/35 met
+        non_met = [w for w in warnings if "partial" in w or "deferred" in w or "not met" in w]
+        assert len(non_met) >= 1, (
+            f"Expected at least 1 non-met warning (from any conformance report), "
+            f"got {len(non_met)}: {non_met}"
         )
 
 
