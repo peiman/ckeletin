@@ -1,13 +1,13 @@
 # conformance/ckeletin-rust.yaml
 # Conformance report for ckeletin-rust (workhorse) against the ckeletin spec.
 #
-# Written by hand from evidence audit. Not auto-generated — the conformance
-# mapping in workhorse had false claims (AGENTS.md, CHANGELOG.md). This
-# report says what's actually true.
+# Updated after migration to .ckeletin/ framework model. Clean crate names
+# (domain, infrastructure, cli). Framework code in .ckeletin/crate/.
+# 140 tests, 97% coverage, 32/35 met.
 
 implementation: ckeletin-rust
 spec_version: "0.4.0"
-report_date: "2026-04-14"
+report_date: "2026-04-18"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -18,99 +18,87 @@ requirements:
     status: met
     enforcement_level: compile-time
     evidence: >
-      Cargo workspace with 3 production crates: crates/domain,
-      crates/infrastructure, crates/cli. Plus crates/conform for
-      conformance tooling. crates/domain/Cargo.toml declares no
-      dependency on workhorse-infrastructure or workhorse-cli.
-      Any reverse import is a compile error.
+      Cargo workspace with 3 project crates (domain, infrastructure, cli)
+      plus framework crate (.ckeletin/crate, name = "ckeletin") and
+      conformance tool (.ckeletin/conform). Domain depends only on serde.
+      Infrastructure depends on ckeletin. CLI converges both.
     violation_evidence: >
       Structural enforcement via Cargo workspace dependency graph.
-      File: crates/domain/Cargo.toml — dependency list contains
-      only serde. File: crates/infrastructure/Cargo.toml — no
-      dependency on workhorse-domain or workhorse-cli.
-      Additionally, individual import violations are tested via
-      trybuild: crates/domain/tests/violations/domain_imports_infrastructure.rs.
+      File: crates/domain/Cargo.toml — depends only on serde.
+      File: crates/infrastructure/Cargo.toml — depends on ckeletin, not domain/cli.
+      Individual import violations tested via trybuild:
+      crates/domain/tests/violations/domain_imports_infrastructure.rs.
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
+      - "cargo test -p domain architecture_violations"
 
   CKSPEC-ARCH-002:
     status: met
     enforcement_level: compile-time
     evidence: >
-      Domain depends only on serde. Infrastructure depends on serde,
-      serde_json, figment, tracing, thiserror — no domain or cli deps.
-      CLI depends on both domain and infrastructure (convergence point).
-      Reverse imports are compile errors.
+      Domain depends only on serde. Infrastructure depends on ckeletin
+      (framework) — no domain or cli deps. CLI depends on both domain
+      and infrastructure (convergence point). Reverse imports are
+      compile errors.
     violation_test: "crates/domain/tests/violations/domain_imports_infrastructure.rs"
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
-      - "cargo test -p workhorse-infrastructure architecture_violations"
+      - "cargo test -p domain architecture_violations"
+      - "cargo test -p infrastructure architecture_violations"
 
   CKSPEC-ARCH-003:
     status: met
     enforcement_level: compile-time
     evidence: >
       Only crates/cli/Cargo.toml lists clap. Domain and infrastructure
-      Cargo.toml files do not. Any clap import in domain or
-      infrastructure is a compile error.
+      cannot import it — compile error.
     violation_test: "crates/domain/tests/violations/domain_imports_clap.rs"
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
-      - "cargo test -p workhorse-infrastructure architecture_violations"
-    notes: >
-      Two violation tests: domain_imports_clap.rs and
-      infra_imports_clap.rs — both prove compile failure.
+      - "cargo test -p domain architecture_violations"
+      - "cargo test -p infrastructure architecture_violations"
 
   CKSPEC-ARCH-004:
     status: met
     enforcement_level: compile-time
     evidence: >
-      Domain crate (workhorse-domain) depends only on serde. No
-      cross-domain, infrastructure, or framework imports. Business
-      logic types (Diagnosis, PingResult, SystemStatus) use
-      serde::Serialize for output — permitted per spec notes.
-    violation_test: "crates/domain/tests/violations/domain_imports_figment.rs"
+      Domain crate depends only on serde. Cannot import infrastructure,
+      ckeletin, clap, figment, or tracing — each has a violation test.
+    violation_test: "crates/domain/tests/violations/domain_imports_ckeletin.rs"
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
+      - "cargo test -p domain architecture_violations"
     notes: >
-      Two additional violation tests verify domain cannot import
-      tracing (domain_imports_tracing.rs) or infrastructure
-      (domain_imports_infrastructure.rs).
+      5 violation tests for domain: clap, figment, tracing,
+      infrastructure, ckeletin. The ckeletin test prevents domain
+      from bypassing the infrastructure re-export layer.
 
   CKSPEC-ARCH-005:
     status: met
     enforcement_level: compile-time
     evidence: >
-      Infrastructure Cargo.toml has no dependency on workhorse-domain
-      or workhorse-cli. Infrastructure cannot reach up.
+      Infrastructure Cargo.toml has no dependency on domain or cli.
+      Depends on ckeletin (framework) which is infrastructure-level.
     violation_test: "crates/infrastructure/tests/violations/infra_imports_domain.rs"
     tests:
-      - "cargo test -p workhorse-infrastructure architecture_violations"
+      - "cargo test -p infrastructure architecture_violations"
 
   CKSPEC-ARCH-006:
     status: met
     evidence: >
-      crates/cli/src/main.rs is 88 lines. Contains only: CLI arg
-      parsing (clap), config loading, logging init, output mode
-      selection, and command dispatch. No business logic. All logic
-      lives in domain (analysis, types) and infrastructure (I/O,
-      config, output rendering).
+      crates/cli/src/main.rs is bootstrap only — arg parsing, config
+      loading, logging init, command dispatch. All logic lives in
+      domain and infrastructure crates.
     violation_evidence: >
-      Structural: only crates/cli/Cargo.toml has a [[bin]] target
-      (lines 7-9). Domain and infrastructure crates are library-only.
-      File: crates/cli/src/main.rs — bootstrap only.
+      Structural: only crates/cli/Cargo.toml has a [[bin]] target.
+      Domain and infrastructure crates are library-only.
+      File: crates/cli/Cargo.toml lines 7-9.
 
   CKSPEC-ARCH-007:
     status: met
     enforcement_level: compile-time
     evidence: >
-      All source files live in designated crate directories. Domain
-      logic in crates/domain/src/, infrastructure in
-      crates/infrastructure/src/, CLI in crates/cli/src/. No source
-      files at workspace root. Workspace structure enforces this.
+      All source in designated crate directories. Framework code in
+      .ckeletin/crate/. Workspace structure enforces location.
     violation_evidence: >
       Structural enforcement via Cargo crate configuration.
-      File: crates/cli/Cargo.toml (lines 7-9) — only [[bin]] target.
+      File: crates/cli/Cargo.toml — only [[bin]] target.
       File: crates/domain/Cargo.toml — no [[bin]] section.
       File: crates/infrastructure/Cargo.toml — no [[bin]] section.
 
@@ -121,52 +109,41 @@ requirements:
   CKSPEC-ENF-001:
     status: met
     evidence: >
-      Justfile gateway: just check runs fmt-check, clippy (-D warnings),
-      test (full workspace), and cargo-deny (licenses, advisories).
-      6 trybuild compile-fail tests for architecture enforcement.
-      Pre-commit hooks via lefthook for fmt and clippy.
+      Justfile gateway: just check runs ckeletin-check (fmt, clippy,
+      deny), test (full workspace), and ckeletin-health. Pre-commit
+      hooks via lefthook. 7 trybuild compile-fail tests for architecture.
+      Framework purity tests prevent hardcoded values in .ckeletin/.
 
   CKSPEC-ENF-002:
     status: met
     evidence: >
-      Enforcement ladder used across requirements: compile-time
-      (6 architecture requirements via Cargo workspace + trybuild),
-      script/CI (output tests, coverage threshold, conformance
-      generator), honor-system (TDD intent, atomic commits). Highest
-      feasible level used for each requirement.
+      Enforcement ladder used: compile-time (7 architecture violation
+      tests), script/CI (output tests, coverage, conformance generator),
+      honor-system (TDD intent, atomic commits). Framework purity tests
+      are invariant tests — verify properties of the codebase itself.
 
   CKSPEC-ENF-003:
     status: partial
     evidence: >
-      Enforcement gaps are documented in conformance-mapping.toml
-      which tracks enforcement_level per requirement. Honor-system
-      entries are explicitly marked. However, no standalone enforcement
-      audit document (CONFORMANCE.md) exists yet — the mapping file
-      serves this purpose but is not human-readable at a glance.
-    notes: >
-      The conformance-mapping.toml captures gaps but a proper
-      enforcement audit table in a readable format is needed.
+      Enforcement gaps documented in conformance-mapping.toml with
+      enforcement_level per requirement. Honor-system entries explicitly
+      marked. No standalone human-readable audit table yet.
 
   CKSPEC-ENF-004:
     status: partial
     evidence: >
       conformance-mapping.toml tracks all 35 requirements with status,
-      enforcement_level, evidence, checks, and violation_tests. This
-      is the enforcement audit data. However, it is not presented as
-      a living audit table in a human-readable document — it is a
-      machine-readable TOML file consumed by the conformance generator.
-    notes: >
-      Data exists, presentation does not. Need a readable audit
-      table derived from the mapping.
+      enforcement_level, evidence, checks, violation_tests, and
+      violation_evidence. Machine-readable but not a human-readable
+      audit table document.
 
   CKSPEC-ENF-005:
     status: met
     enforcement_level: script
     evidence: >
-      crates/conform/src/main.rs reads conformance-mapping.toml and
-      validates that all 35 spec requirement IDs are present before
-      generating a report. Missing IDs cause the generator to abort.
-      Run: just conform
+      Conformance generator (.ckeletin/conform) fetches requirements.json
+      from the spec repo at runtime. Falls back to cached copy offline.
+      Validates all requirement IDs are mapped before reporting.
     tests:
       - "just conform"
 
@@ -174,27 +151,24 @@ requirements:
     status: partial
     enforcement_level: script
     evidence: >
-      6 trybuild violation tests prove enforcement for ARCH-002, 003,
-      004, 005 (compile-time claims). ARCH-001 and ARCH-007 use
-      violation_evidence (structural enforcement via Cargo workspace).
-      ARCH-006 uses violation_evidence (structural — no [[bin]] in
-      domain/infrastructure). Remaining requirements with enforcement
-      claims above honor-system lack violation tests.
+      7 trybuild violation tests for compile-time claims (5 domain +
+      2 infrastructure). 3 violation_evidence entries for structural
+      claims (ARCH-001, ARCH-006, ARCH-007). Output and enforcement
+      requirements above honor-system still need violation tests or
+      evidence. 2 framework purity tests verify no project-specific
+      strings leak into .ckeletin/.
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
-      - "cargo test -p workhorse-infrastructure architecture_violations"
-    notes: >
-      6 violation tests for compile-time claims. 3 violation_evidence
-      entries for structural claims. Output and enforcement requirements
-      above honor-system still need violation tests or evidence.
+      - "cargo test -p domain architecture_violations"
+      - "cargo test -p infrastructure architecture_violations"
+      - "cargo test -p ckeletin --test framework_purity"
 
   CKSPEC-ENF-007:
     status: met
     enforcement_level: script
     evidence: >
-      crates/conform generates feedback signals when enforcement claims
-      above honor-system lack violation tests. Signals are included
-      in every report run. Run: just conform
+      Conformance generator automatically reports feedback signals
+      when enforcement claims above honor-system lack violation tests
+      or evidence. 13 feedback signals currently reported.
     tests:
       - "just conform"
 
@@ -205,38 +179,31 @@ requirements:
   CKSPEC-TEST-001:
     status: met
     evidence: >
-      TDD enforced via CLAUDE.md which states "Write failing tests
-      first. No exceptions." The diagnose command was built test-first:
-      29 domain tests written before implementation, 22 infrastructure
-      tests before session parser, 11 integration tests before CLI
-      wiring. Process discipline, not tooling.
+      TDD enforced via CLAUDE.md and AGENTS.md. The diagnose command
+      was built test-first: 29 domain tests, 22 infrastructure tests,
+      11 CLI integration tests — all written before implementation.
 
   CKSPEC-TEST-002:
     status: met
     enforcement_level: script
     evidence: >
-      Justfile: just coverage runs cargo llvm-cov --workspace
-      --fail-under-lines 85. Enforces 85% minimum line coverage.
-      Current test count: 132 tests across 4 crates.
+      just coverage runs cargo llvm-cov --workspace --fail-under-lines 85.
+      Current: 97% line coverage (140 tests across all crates).
     tests:
       - "just coverage"
 
   CKSPEC-TEST-003:
     status: met
     evidence: >
-      Writer injection pattern in Output struct: &mut dyn Write
-      parameter allows test isolation without mock frameworks. No
-      mock framework crates in Cargo.toml or Cargo.lock. All test
-      doubles are hand-written (Vec<u8> as Write, tempfile for
-      filesystem tests).
+      Writer injection pattern in Output struct (&mut dyn Write).
+      No mock frameworks in Cargo.toml or Cargo.lock. Test doubles
+      are hand-written (Vec<u8> as Write, tempfile for filesystem).
 
   CKSPEC-TEST-004:
     status: met
     evidence: >
-      Enforced via CLAUDE.md instructions. Tests and implementation
-      committed together. Git history shows atomic commits: e.g.,
-      "feat: workhorse status command" includes both status.rs and
-      its tests in the same commit.
+      Enforced via CLAUDE.md and AGENTS.md. Tests and implementation
+      committed together as atomic units.
 
   # ---------------------------------------------------------------------------
   # Output (CKSPEC-OUT-001 through CKSPEC-OUT-005)
@@ -245,140 +212,132 @@ requirements:
   CKSPEC-OUT-001:
     status: met
     evidence: >
-      Three streams implemented in infrastructure/output.rs: Data to
-      stdout (human Display or JSON envelope), Status to stderr
-      (tracing console subscriber), Audit to log file (tracing JSON
-      file subscriber via tracing-appender).
+      Three streams in .ckeletin/crate/src/output.rs: Data to stdout
+      (human Display or JSON envelope), Status to stderr (tracing
+      console subscriber), Audit to log file (tracing JSON file).
     tests:
-      - "cargo test -p workhorse-infrastructure --lib output"
+      - "cargo test -p ckeletin --lib output"
 
   CKSPEC-OUT-002:
     status: met
     enforcement_level: script
     evidence: >
       --output json flag on all commands. Integration tests verify
-      JSON envelope on stdout and empty stderr in JSON mode. Tests
-      cover ping, status, and diagnose commands in both modes.
+      JSON envelope on stdout and empty stderr. Covers ping, status,
+      diagnose in both human and JSON modes.
     tests:
-      - "cargo test -p workhorse-cli --test cli"
+      - "cargo test -p cli --test cli"
 
   CKSPEC-OUT-003:
     status: met
     enforcement_level: script
     evidence: >
-      Envelope struct in infrastructure/output.rs: status (success/
-      error), command (string), data (Option<serde_json::Value>),
-      error (Option<String>). Serializes with skip_serializing_if
-      for clean output. Roundtrip test verifies JSON stability.
+      Envelope struct in .ckeletin/crate/src/output.rs: status
+      (success/error), command, data, error. Roundtrip test verifies
+      JSON stability.
     tests:
-      - "cargo test -p workhorse-infrastructure --lib output"
+      - "cargo test -p ckeletin --lib output"
 
   CKSPEC-OUT-004:
     status: met
     evidence: >
-      tracing::debug! calls in Output::success() (line 79) and
-      Output::error() (line 102) of infrastructure/output.rs. Shadow
-      logs land in file appender configured via tracing-subscriber.
-      Console logging suppressed in JSON mode to keep stdout clean.
+      tracing::debug! calls in Output::success() and Output::error()
+      in .ckeletin/crate/src/output.rs. Shadow logs land in file
+      appender. Console suppressed in JSON mode.
     tests:
-      - "cargo test -p workhorse-infrastructure --lib output"
+      - "cargo test -p ckeletin --lib output"
 
   CKSPEC-OUT-005:
     status: met
     enforcement_level: compile-time
     evidence: >
-      Domain crate has no std::io dependency. Cannot write to stdout
-      or stderr. All output goes through infrastructure Output struct
-      which business logic receives via function parameter.
-    violation_test: "crates/domain/tests/violations/domain_imports_infrastructure.rs"
+      Domain crate has no std::io dependency and no ckeletin dependency.
+      Cannot write to stdout or access Output struct directly.
+    violation_test: "crates/domain/tests/violations/domain_imports_ckeletin.rs"
     tests:
-      - "cargo test -p workhorse-domain architecture_violations"
+      - "cargo test -p domain architecture_violations"
 
   # ---------------------------------------------------------------------------
   # Agent Readiness (CKSPEC-AGENT-001 through CKSPEC-AGENT-005)
   # ---------------------------------------------------------------------------
 
   CKSPEC-AGENT-001:
-    status: not-met
+    status: met
     evidence: >
-      AGENTS.md does not exist. CLAUDE.md exists but is
-      provider-specific, not a universal agent guide. The conformance
-      mapping falsely claimed this was met.
-    notes: >
-      Need to create AGENTS.md with: project purpose, directory
-      structure, commands, coding conventions, testing strategy.
+      AGENTS.md exists with: project purpose, architecture diagram,
+      crate responsibilities, commands, task runner recipes, coding
+      conventions, testing strategy, conformance info, known constraints.
 
   CKSPEC-AGENT-002:
-    status: not-applicable
+    status: met
     evidence: >
-      AGENTS.md does not exist yet (CKSPEC-AGENT-001 not met).
-      Cannot evaluate provider-specific content in a file that
-      does not exist.
+      AGENTS.md contains no Claude-specific, Gemini-specific, or
+      Copilot-specific instructions. All provider-specific content
+      is in CLAUDE.md.
 
   CKSPEC-AGENT-003:
-    status: partial
+    status: met
     evidence: >
-      CLAUDE.md exists with project-specific instructions including
-      VaultMind integration, system model, agent protocols, and
-      known failure modes. However, it does not reference AGENTS.md
-      (which does not exist yet). Once AGENTS.md is created,
-      CLAUDE.md should reference it.
+      CLAUDE.md exists with provider-specific instructions including
+      VaultMind integration, scientific approach, agent signal protocol,
+      and known failure modes. References AGENTS.md for universal guide.
 
   CKSPEC-AGENT-004:
-    status: not-met
+    status: met
     evidence: >
-      No universal agent guide exists. CLAUDE.md covers project
-      knowledge but is provider-specific. A universal guide covering
-      purpose, architecture, commands, conventions, testing, and
-      troubleshooting is needed.
+      AGENTS.md covers: purpose, architecture (with crate diagram),
+      all commands with usage, task runner recipes, coding conventions,
+      testing strategy (140 tests, violation tests, purity tests),
+      conformance, known constraints.
 
   CKSPEC-AGENT-005:
     status: met
     evidence: >
-      CLI is the primary interface. --output json flag provides
-      machine-readable responses. All operations via workhorse binary
-      or just commands. No MCP or protocol layer required for agent
-      operation. CLAUDE.md + shell access is sufficient.
+      CLI is the primary interface. --output json provides machine-readable
+      responses. All operations via workhorse binary or just commands.
+      No MCP or protocol layer required.
     tests:
-      - "cargo test -p workhorse-cli --test cli"
+      - "cargo test -p cli --test cli"
 
   # ---------------------------------------------------------------------------
   # Changelog (CKSPEC-CL-001 through CKSPEC-CL-007)
   # ---------------------------------------------------------------------------
 
   CKSPEC-CL-001:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist at repository root. The conformance
-      mapping falsely claimed this was met.
+      CHANGELOG.md exists at repository root.
 
   CKSPEC-CL-002:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist. Cannot evaluate format.
+      CHANGELOG.md follows Keep a Changelog format with Added, Changed,
+      Fixed sections. Versions in reverse chronological order.
 
   CKSPEC-CL-003:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist. Cannot evaluate date format.
+      Dates use YYYY-MM-DD format. Example: [0.1.0] - 2026-04-13.
 
   CKSPEC-CL-004:
-    status: not-met
+    status: met
     evidence: >
-      Cargo.toml workspace version is 0.1.0 (SemVer format). However,
-      CHANGELOG.md does not exist to document versioning adherence.
+      CHANGELOG.md states adherence to Semantic Versioning. Cargo.toml
+      workspace version is 0.1.0 (SemVer format).
 
   CKSPEC-CL-005:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist. No [Unreleased] section.
+      [Unreleased] section at top of CHANGELOG.md with Added, Changed,
+      Fixed categories for in-progress work.
 
   CKSPEC-CL-006:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist.
+      Entries are human-written, describing features at user-relevant
+      granularity. Not a git log dump.
 
   CKSPEC-CL-007:
-    status: not-met
+    status: met
     evidence: >
-      CHANGELOG.md does not exist. No comparison links.
+      Comparison link at bottom: Unreleased → compare/v0.1.0...HEAD.
