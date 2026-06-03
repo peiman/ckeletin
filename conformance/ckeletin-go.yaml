@@ -5,8 +5,8 @@
 # Source: conformance-mapping.yaml + violation tests + automated checks.
 
 implementation: ckeletin-go
-spec_version: "0.4.0"
-report_date: "2026-04-14"
+spec_version: "0.5.0"
+report_date: "2026-06-03"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -387,6 +387,19 @@ requirements:
       logic must use internal/ui for Data stream and internal/logger
       for Status stream. Enforced via task check.
     tests: ["task validate:output"]
+
+  CKSPEC-OUT-006:
+    status: met
+    enforcement_level: ci
+    evidence: >
+      .ckeletin/Taskfile.yml and .goreleaser.yml inject build identity via
+      -ldflags: cmd.Version (git describe --tags --always --dirty), cmd.Commit
+      (git rev-parse HEAD), cmd.Date (date -u). cmd/root.go assembles
+      RootCmd.Version = "<version>, commit <commit>, built at <date>", so
+      `--version` surfaces full provenance; the dirty state is carried by the
+      `-dirty` suffix that `git describe --dirty` appends. Defaults
+      ("dev"/""/"") stand in when git is unavailable at build time.
+    tests: ["task build"]
 
   # ---------------------------------------------------------------------------
   # Agent Readiness (CKSPEC-AGENT-001 through CKSPEC-AGENT-005)

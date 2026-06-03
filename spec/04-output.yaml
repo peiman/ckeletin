@@ -99,3 +99,30 @@ requirements:
       data, the rendering layer formats it. Automated Enforcement
       (Principle 9) — this is checkable by static analysis (detect
       direct print/stdout usage in business logic packages).
+
+  - id: CKSPEC-OUT-006
+    title: Build identity in version output
+    level: MUST
+    since: v0.5.0
+    checkable: true
+    description: >
+      The CLI MUST surface its build provenance in version output: at
+      minimum the semantic version, the source commit identifier, a
+      build-or-commit date, and whether the build came from a dirty
+      (modified tracked files) working tree. Each field that cannot be
+      resolved at build time MUST degrade to an explicit "unknown"
+      rather than being omitted or fabricated.
+    rationale: >
+      Truth-Seeking (Principle 1) — provenance is evidence. An operator
+      or agent debugging a deployed binary must be able to determine
+      which commit produced it, and whether the tree was clean, without
+      guessing. Single Source of Truth (Principle 7) — one version
+      string, surfaced in both --version and any structured version
+      command, keeps the human and machine views from drifting.
+    notes: >
+      Go bakes these via -ldflags (git describe --dirty, commit, date);
+      Rust bakes them via a build script into compile-time env vars read
+      at the call site. Runtime staleness checking — comparing the baked
+      commit to the repo's current HEAD — is explicitly NOT required by
+      this requirement; it is an operational diagnostic that belongs in a
+      separate command.

@@ -6,8 +6,8 @@
 # 140 tests, 97% coverage, 32/35 met.
 
 implementation: ckeletin-rust
-spec_version: "0.4.0"
-report_date: "2026-04-18"
+spec_version: "0.5.0"
+report_date: "2026-06-03"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -256,6 +256,22 @@ requirements:
     violation_test: "crates/domain/tests/violations/domain_imports_ckeletin.rs"
     tests:
       - "cargo test -p domain architecture_violations"
+
+  CKSPEC-OUT-006:
+    status: met
+    enforcement_level: ci
+    evidence: >
+      crates/cli/build.rs bakes the identity at compile time (git describe
+      --always --abbrev=7 --dirty forced to a bare SHA via an impossible
+      --match, plus commit date via %cs) into compile-time env vars.
+      crates/cli/src/version.rs reads them with option_env! (degrading to
+      "unknown" when absent) into ckeletin::build_info::BuildInfo, surfaced in
+      both --version (via BuildInfo::version_line) and a `version` command in
+      human + JSON. The primitive (BuildInfo + version_line) lives in the
+      framework crate (.ckeletin/crate/src/build_info.rs).
+    tests:
+      - "cargo test -p cli version"
+      - "cargo test -p ckeletin build_info"
 
   # ---------------------------------------------------------------------------
   # Agent Readiness (CKSPEC-AGENT-001 through CKSPEC-AGENT-005)

@@ -9,6 +9,7 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
+- Build identity requirement (CKSPEC-OUT-006) — version output MUST surface version + commit + date + dirty, degrading unavailable fields to "unknown"; bumps spec to v0.5.0. Satisfied by ckeletin-go (-ldflags) and ckeletin-rust (build script + `version` command).
 - Machine-readable requirement list (spec/requirements.json) — generated from spec YAMLs, validated by task check, replaces hardcoded ID lists in conformance generators
 - task generate:requirements command — produces requirements.json from the authoritative YAML source
 - Sync validation in task check — regenerates requirements.json in memory and fails if the on-disk copy has drifted
