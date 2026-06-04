@@ -172,3 +172,43 @@ class TestFetchAndAggregate:
         text = (conf_dir / "ckeletin-go.yaml").read_text()
         assert "AUTO-GENERATED" in text
         assert "Do NOT edit by hand" in text
+
+    def test_aggregate_graceful_on_malformed_report(self, tmp_path):
+        # Valid JSON, but structurally malformed (a requirement entry has no 'status').
+        bad = {
+            "implementation": "ckeletin-go",
+            "spec_version": "0.6.0",
+            "requirements": {"CKSPEC-ARCH-001": {"evidence": "x"}},
+        }
+        src = tmp_path / "bad.json"
+        src.write_text(json.dumps(bad))
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir()
+        existing = conf_dir / "ckeletin-go.yaml"
+        existing.write_text("implementation: ckeletin-go\n")
+        written, failed = aggregate(
+            str(conf_dir), "2026-06-04",
+            registry={"ckeletin-go": str(src)},
+        )
+        assert written == []
+        assert failed == ["ckeletin-go"]
+        # The existing file is left untouched (graceful fallback, not truncated).
+        assert existing.read_text() == "implementation: ckeletin-go\n"
+
+    def test_one_malformed_report_does_not_block_others(self, tmp_path):
+        good = _sample_report()
+        good_src = tmp_path / "good.json"
+        good_src.write_text(json.dumps(good))
+        bad_src = tmp_path / "bad.json"
+        bad_src.write_text(json.dumps({"implementation": "x"}))  # missing spec_version
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir()
+        written, failed = aggregate(
+            str(conf_dir), "2026-06-04",
+            # Bad impl first; the good one must still be processed.
+            registry={"ckeletin-bad": str(bad_src), "ckeletin-go": str(good_src)},
+        )
+        assert failed == ["ckeletin-bad"]
+        assert written == ["ckeletin-go"]
+        assert (conf_dir / "ckeletin-go.yaml").exists()
+        assert not (conf_dir / "ckeletin-bad.yaml").exists()

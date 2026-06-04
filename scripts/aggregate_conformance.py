@@ -67,9 +67,9 @@ def report_to_conformance(report, report_date):
             out["tests"] = list(entry["checks"])
         if entry.get("violation_tests"):
             out["violation_tests"] = list(entry["violation_tests"])
-        violation_evidence = entry.get("violation_evidence")
+        violation_evidence = (entry.get("violation_evidence") or "").strip()
         if violation_evidence:
-            out["violation_evidence"] = violation_evidence.strip()
+            out["violation_evidence"] = violation_evidence
         requirements[req_id] = out
 
     return {
@@ -86,13 +86,18 @@ def _str_representer(dumper, data):
     return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
 
 
+class _ConformanceDumper(yaml.SafeDumper):
+    """Private dumper so the str representer never mutates the global SafeDumper."""
+
+
+_ConformanceDumper.add_representer(str, _str_representer)
+
+
 def dump_conformance_yaml(data):
     """Serialize a conformance dict to YAML (deterministic, insertion order)."""
-    dumper = yaml.SafeDumper
-    dumper.add_representer(str, _str_representer)
     return yaml.dump(
         data,
-        Dumper=dumper,
+        Dumper=_ConformanceDumper,
         default_flow_style=False,
         sort_keys=False,
         allow_unicode=True,
@@ -110,9 +115,11 @@ def write_conformance_file(path, data):
         "# published conformance-report.json. Do NOT edit by hand — run\n"
         "# 'task generate:conformance' to refresh.\n\n"
     )
+    # Build the full content BEFORE opening the file, so a serialization error
+    # cannot truncate the existing report (graceful fallback).
+    content = banner + dump_conformance_yaml(data)
     with open(path, "w") as f:
-        f.write(banner)
-        f.write(dump_conformance_yaml(data))
+        f.write(content)
 
 
 def aggregate(conformance_dir, report_date, only_impl=None, registry=None):
@@ -126,18 +133,24 @@ def aggregate(conformance_dir, report_date, only_impl=None, registry=None):
     for impl, source in registry.items():
         if only_impl and impl != only_impl:
             continue
+        # Fetch, transform, and write are all guarded: a fetch failure OR a
+        # structurally malformed report (missing keys, wrong types) leaves the
+        # existing conformance/<impl>.yaml untouched and does not abort the run
+        # for the other implementations (graceful per-impl fallback).
         try:
             report = fetch_report(source)
-        except (urllib.error.URLError, OSError, ValueError) as exc:
+            data = report_to_conformance(report, report_date)
+            out_path = os.path.join(conformance_dir, f"{impl}.yaml")
+            write_conformance_file(out_path, data)
+        except (
+            urllib.error.URLError, OSError, ValueError, KeyError, TypeError, AttributeError
+        ) as exc:
             print(
-                f"⚠ {impl}: could not fetch report ({exc}); "
+                f"⚠ {impl}: could not process report ({exc}); "
                 f"leaving conformance/{impl}.yaml unchanged"
             )
             failed.append(impl)
             continue
-        data = report_to_conformance(report, report_date)
-        out_path = os.path.join(conformance_dir, f"{impl}.yaml")
-        write_conformance_file(out_path, data)
         print(
             f"✓ {impl}: wrote {os.path.relpath(out_path)} "
             f"({len(data['requirements'])} requirements, spec {data['spec_version']})"
