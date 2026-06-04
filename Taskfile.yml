@@ -27,6 +27,13 @@ tasks:
       - '{{.PYTHON}} scripts/generate_requirements.py'
       - '{{.PYTHON}} scripts/validate_spec.py'
 
+  generate:conformance:
+    desc: Aggregate published conformance reports into conformance/<impl>.yaml
+    deps: [setup]
+    cmds:
+      - '{{.PYTHON}} scripts/aggregate_conformance.py'
+      - '{{.PYTHON}} scripts/validate_spec.py'
+
   test:
     desc: Run validation tests
     deps: [setup]
