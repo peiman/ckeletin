@@ -251,7 +251,7 @@ class TestConformanceWarnings:
     def test_real_conformance_warnings_visible(self, conformance_dir):
         """Real conformance reports' non-met entries produce warnings."""
         warnings = collect_conformance_warnings(conformance_dir)
-        # ckeletin-rust has partial entries; ckeletin-go is 38/38 met
+        # ckeletin-rust has partial/deferred entries; ckeletin-go is 39/39 met
         non_met = [w for w in warnings if "partial" in w or "deferred" in w or "not met" in w]
         assert len(non_met) >= 1, (
             f"Expected at least 1 non-met warning (from any conformance report), "
@@ -261,9 +261,9 @@ class TestConformanceWarnings:
 
 class TestRequirementsGeneration:
     def test_collect_all_requirements_count(self, spec_dir):
-        """Must collect all 38 requirements from spec files."""
+        """Must collect all 39 requirements from spec files."""
         reqs = collect_all_requirements(spec_dir)
-        assert len(reqs) == 38, f"Expected 38 requirements, got {len(reqs)}"
+        assert len(reqs) == 39, f"Expected 39 requirements, got {len(reqs)}"
 
     def test_collect_all_requirements_has_required_fields(self, spec_dir):
         """Every collected requirement must have id, title, level, checkable, domain, since."""
@@ -311,13 +311,13 @@ class TestRequirementsGeneration:
         assert "spec_version" in data
         assert "requirements" in data
         assert isinstance(data["requirements"], list)
-        assert len(data["requirements"]) == 38
+        assert len(data["requirements"]) == 39
 
     def test_generate_requirements_data_spec_version(self, spec_dir):
         """Spec version must match highest version in requirements."""
         data = generate_requirements_data(spec_dir)
-        # v0.6.0 is the highest (CKSPEC-ENF-008 / CKSPEC-ENF-009 since: v0.6.0)
-        assert data["spec_version"] == "0.6.0"
+        # v0.7.0 is the highest (CKSPEC-ENF-010 since: v0.7.0)
+        assert data["spec_version"] == "0.7.0"
 
     def test_generate_requirements_data_deterministic(self, spec_dir):
         """Two calls must produce identical output."""

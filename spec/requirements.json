@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.6.0",
+  "spec_version": "0.7.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -227,6 +227,14 @@
       "checkable": true,
       "domain": "Enforcement",
       "since": "v0.6.0"
+    },
+    {
+      "id": "CKSPEC-ENF-010",
+      "title": "Published machine-readable conformance report",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.7.0"
     },
     {
       "id": "CKSPEC-OUT-001",
