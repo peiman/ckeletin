@@ -32,6 +32,9 @@ PUBLISHED_REPORTS = {
     "ckeletin-go": (
         "https://raw.githubusercontent.com/peiman/ckeletin-go/main/conformance-report.json"
     ),
+    "ckeletin-rust": (
+        "https://raw.githubusercontent.com/peiman/ckeletin-rust/main/conformance-report.json"
+    ),
 }
 
 

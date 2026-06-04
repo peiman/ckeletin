@@ -248,14 +248,43 @@ class TestConformanceWarnings:
             warnings = collect_conformance_warnings(tmpdir)
             assert warnings == [], f"Should have no warnings, got: {warnings}"
 
-    def test_real_conformance_warnings_visible(self, conformance_dir):
-        """Real conformance reports' non-met entries produce warnings."""
+    def test_real_conformance_warnings_match_non_met_entries(self, conformance_dir):
+        """The warning collector surfaces exactly the non-met entries present in
+        the real conformance reports — no spurious warnings, none missed.
+
+        This holds whether an implementation is fully conformant (zero non-met,
+        zero warnings) or not, so it does not depend on any implementation being
+        incomplete. As of spec v0.7.0 both reference implementations
+        (ckeletin-go, ckeletin-rust) are 39/39 met, so the expected count is
+        zero; the test stays correct if a future report regresses. The warning
+        *mechanism* (each non-met status produces a warning) is covered by the
+        synthetic-fixture tests above.
+        """
+        import glob
+        import yaml
+
         warnings = collect_conformance_warnings(conformance_dir)
-        # ckeletin-rust has partial/deferred entries; ckeletin-go is 39/39 met
-        non_met = [w for w in warnings if "partial" in w or "deferred" in w or "not met" in w]
-        assert len(non_met) >= 1, (
-            f"Expected at least 1 non-met warning (from any conformance report), "
-            f"got {len(non_met)}: {non_met}"
+        non_met_warnings = [
+            w for w in warnings
+            if w.endswith(("is deferred", "is not met", "is partial"))
+        ]
+
+        non_met_statuses = {"deferred", "not-met", "partial"}
+        expected = 0
+        for path in sorted(glob.glob(os.path.join(conformance_dir, "*.yaml"))):
+            with open(path) as f:
+                data = yaml.safe_load(f) or {}
+            reqs = data.get("requirements", {})
+            if not isinstance(reqs, dict):
+                continue
+            expected += sum(
+                1 for entry in reqs.values()
+                if isinstance(entry, dict) and entry.get("status") in non_met_statuses
+            )
+
+        assert len(non_met_warnings) == expected, (
+            f"warning count {len(non_met_warnings)} must equal the {expected} "
+            f"non-met entries across the real conformance reports; warnings={warnings}"
         )
 
 
