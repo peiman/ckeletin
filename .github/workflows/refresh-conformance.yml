@@ -3,16 +3,18 @@ name: Refresh conformance
 # Pull-based freshness for the aggregated conformance snapshots.
 #
 # The spec repo owns the PUBLISHED_REPORTS registry, so it owns the polling —
-# no implementation repo needs a cross-repo token or a sender workflow. A cheap
-# `--check` pass detects whether any published report has actually DRIFTED from
-# its committed snapshot; because the published report is timestamp-free, that is
-# a true conformance-change signal, not a re-stamp. Only when something drifted
-# does the job aggregate the changed implementations, validate, and open a PR.
+# no implementation repo needs a cross-repo token or a sender workflow (the
+# reports are fetched unauthenticated over raw.githubusercontent.com, which
+# assumes the implementation repos are public). A cheap `--check` pass detects
+# whether any published report has DRIFTED from its committed snapshot, or is
+# newly registered; because the published report is timestamp-free, that is a
+# true conformance-change signal, not a re-stamp. Only then does the job
+# aggregate the changed implementations, validate, and open a PR.
 #
-# Runs with the repo's own GITHUB_TOKEN (intra-repo branch + PR — no PAT). Note:
-# a GITHUB_TOKEN-opened PR does not re-trigger spec-check.yml, so this job runs
-# validate_spec.py itself before opening the PR; the refresh is validated either
-# way.
+# Runs with the repo's own GITHUB_TOKEN (intra-repo branch + PR — no PAT). A
+# GITHUB_TOKEN-opened PR does not re-trigger spec-check.yml, so this job runs
+# validate_spec.py itself before opening the PR — any PR it opens has already
+# passed validation in-job.
 
 on:
   schedule:
@@ -41,12 +43,18 @@ jobs:
         id: detect
         run: |
           set -euo pipefail
-          # Drifted/new impl names land on stdout (one per line); the per-impl
-          # summary goes to stderr (visible in the job log).
-          drifted=$(python scripts/aggregate_conformance.py --check)
+          # stdout = drifted/new impl names (one per line); stderr = per-impl summary.
+          python scripts/aggregate_conformance.py --check >drifted.txt 2>summary.txt
+          cat summary.txt >&2
+          # A moved/renamed repo (unreachable) or an impl publishing an invalid
+          # report (malformed) cannot be auto-refreshed — surface it as a warning,
+          # visible in the Actions UI, without failing the daily job.
+          if grep -qE ': (malformed|unreachable)$' summary.txt; then
+            echo "::warning::A published report is unreachable or malformed; its snapshot was not refreshed (see the summary above)."
+          fi
           {
             echo "drifted<<EOF"
-            echo "$drifted"
+            cat drifted.txt
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -59,7 +67,9 @@ jobs:
           while IFS= read -r impl; do
             [ -z "$impl" ] && continue
             echo "Refreshing $impl"
-            python scripts/aggregate_conformance.py --impl "$impl"
+            # --strict so a report that broke between detect and refresh fails the
+            # job loudly instead of silently leaving the snapshot unchanged.
+            python scripts/aggregate_conformance.py --impl "$impl" --strict
           done <<< "$DRIFTED"
           # Validate the refreshed snapshots in-job, since the auto-PR below
           # (opened via GITHUB_TOKEN) will not re-trigger spec-check.yml.
@@ -72,10 +82,15 @@ jobs:
           DRIFTED: ${{ steps.detect.outputs.drifted }}
         run: |
           set -euo pipefail
+          # We only reach this step when drift was detected, so aggregation MUST
+          # have produced a change. No change here is a contradiction (a swallowed
+          # failure) — fail loudly rather than going green-and-silent.
           if git diff --quiet -- conformance/; then
-            echo "No net change after aggregation; nothing to open."
-            exit 0
+            echo "::error::Drift was detected but aggregation produced no change; a report likely broke between detect and refresh." >&2
+            exit 1
           fi
+          # auto/refresh-conformance is a bot-owned, disposable branch — it is
+          # force-pushed each run, so don't hand-push commits onto it.
           BRANCH=auto/refresh-conformance
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

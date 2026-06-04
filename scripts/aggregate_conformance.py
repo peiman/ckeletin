@@ -37,6 +37,12 @@ PUBLISHED_REPORTS = {
     ),
 }
 
+# Drift classification produced by check_drift(). NEEDS_REFRESH are the statuses
+# that warrant regenerating a snapshot — the single source of truth the scheduled
+# workflow's detect→refresh seam depends on (mirrors validate_spec.VALID_STATUSES).
+DRIFT_STATUSES = ("unchanged", "drifted", "new", "malformed", "unreachable")
+NEEDS_REFRESH = ("drifted", "new")
+
 
 def fetch_report(source, timeout=10):
     """Fetch and parse a published conformance report (JSON).
@@ -162,19 +168,41 @@ def aggregate(conformance_dir, report_date, only_impl=None, registry=None):
     return written, failed
 
 
+def _read_committed(path):
+    """Parse a committed conformance/<impl>.yaml. Returns the mapping, or None if
+    the file is unreadable, unparseable, or not a mapping — all of which mean
+    "regenerate it", never "crash the run". (A *missing* file is the caller's
+    `os.path.exists` "new" case and isn't reached here.)
+    """
+    try:
+        with open(path, "r") as f:
+            data = yaml.safe_load(f)
+    except (OSError, yaml.YAMLError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def check_drift(conformance_dir, registry=None):
     """Classify each registered implementation WITHOUT writing anything.
 
-    Returns ``{impl: status}`` where status is one of:
+    Returns ``{impl: status}`` where status is one of ``DRIFT_STATUSES``:
       - ``"unchanged"``   — the committed snapshot already matches the report
-      - ``"drifted"``     — the report's conformance DATA changed (status/evidence/…)
+      - ``"drifted"``     — the report's conformance data changed, OR the committed
+                            snapshot is unreadable / non-conformant (regenerate to
+                            self-heal)
       - ``"new"``         — registered but never aggregated (no committed file yet)
-      - ``"unreachable"`` — the report could not be fetched or parsed
+      - ``"malformed"``   — the report fetched but cannot be transformed (the
+                            implementation published an invalid report); it cannot
+                            be aggregated, so it is surfaced, not auto-refreshed
+      - ``"unreachable"`` — the report could not be fetched (network / moved repo)
 
-    ``report_date`` is ignored: the published report is timestamp-free, and the
-    committed snapshot's own date is reused for the comparison, so a re-stamp is
-    never reported as drift — only a real conformance change is. This is the
-    cheap pre-check the scheduled refresh runs before doing any aggregation.
+    The fetch is the ONLY step a failure is treated as transient. A failure to
+    transform a fetched report is "malformed" (the impl's fault), and a failure to
+    read our own committed file becomes "drifted" (regenerate) — neither is blamed
+    on reachability. ``report_date`` is ignored: the committed snapshot's own date
+    is reused for the comparison, so a re-stamp is never drift — only a real
+    conformance change is. This is the cheap pre-check the scheduled refresh runs
+    before aggregating.
     """
     registry = PUBLISHED_REPORTS if registry is None else registry
     results = {}
@@ -188,15 +216,43 @@ def check_drift(conformance_dir, registry=None):
         if not os.path.exists(out_path):
             results[impl] = "new"
             continue
+        committed = _read_committed(out_path)  # None if unreadable / non-conformant
+        # Transform the FETCHED report; a failure here is a malformed report, not
+        # a local or reachability problem.
         try:
-            with open(out_path, "r") as f:
-                committed = yaml.safe_load(f)
-            committed_date = (committed or {}).get("report_date", "")
+            committed_date = committed.get("report_date", "") if committed else ""
             fresh = report_to_conformance(report, committed_date)
-            results[impl] = "unchanged" if fresh == committed else "drifted"
-        except (OSError, ValueError, KeyError, TypeError, AttributeError):
-            results[impl] = "unreachable"
+        except (KeyError, TypeError, AttributeError):
+            results[impl] = "malformed"
+            continue
+        # Drift when the data differs, or the committed file was unreadable /
+        # non-conformant (committed is None → regenerate to self-heal).
+        results[impl] = "unchanged" if (committed is not None and fresh == committed) else "drifted"
     return results
+
+
+def run_check(conformance_dir, strict=False, registry=None):
+    """Emit the ``--check`` report and return the needs-refresh list.
+
+    Needs-refresh impl names (``drifted``/``new``) go to stdout, one per line —
+    the machine-readable stream the scheduled workflow captures. The full per-impl
+    summary goes to stderr. Under ``strict``, raises ``SystemExit(1)`` if any
+    report is ``malformed`` or ``unreachable`` so CI can alert on a persistently
+    broken or moved report.
+    """
+    results = check_drift(conformance_dir, registry=registry)
+    needs_refresh = [impl for impl, st in results.items() if st in NEEDS_REFRESH]
+    for impl, st in results.items():
+        print(f"  {impl}: {st}", file=sys.stderr)
+    print(
+        f"Checked {len(results)} report(s); {len(needs_refresh)} need refresh.",
+        file=sys.stderr,
+    )
+    for impl in needs_refresh:
+        print(impl)
+    if strict and any(st in ("malformed", "unreachable") for st in results.values()):
+        raise SystemExit(1)
+    return needs_refresh
 
 
 def main():
@@ -231,19 +287,7 @@ def main():
     conformance_dir = os.path.join(repo_root, "conformance")
 
     if args.check:
-        results = check_drift(conformance_dir)
-        needs_refresh = [impl for impl, st in results.items() if st in ("drifted", "new")]
-        for impl, st in results.items():
-            print(f"  {impl}: {st}", file=sys.stderr)
-        print(
-            f"Checked {len(results)} report(s); {len(needs_refresh)} need refresh.",
-            file=sys.stderr,
-        )
-        # Machine-readable: drifted/new impl names, one per line, on stdout.
-        for impl in needs_refresh:
-            print(impl)
-        if args.strict and any(st == "unreachable" for st in results.values()):
-            sys.exit(1)
+        run_check(conformance_dir, strict=args.strict)
         return
 
     written, failed = aggregate(conformance_dir, report_date, only_impl=args.impl)
