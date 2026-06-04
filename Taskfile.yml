@@ -34,6 +34,12 @@ tasks:
       - '{{.PYTHON}} scripts/aggregate_conformance.py'
       - '{{.PYTHON}} scripts/validate_spec.py'
 
+  check:conformance:
+    desc: Report which implementations' published reports have drifted (no writes)
+    deps: [setup]
+    cmds:
+      - '{{.PYTHON}} scripts/aggregate_conformance.py --check'
+
   test:
     desc: Run validation tests
     deps: [setup]
