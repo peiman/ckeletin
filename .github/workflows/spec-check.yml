@@ -1,0 +1,34 @@
+name: Spec Check
+
+# Validates the ckeletin spec and its conformance reports on every push and PR.
+# (The legacy ci.yml is a stale "mycliapp" template that never runs validate_spec;
+# this workflow is the actual spec/conformance gate — CKSPEC Automated Enforcement.)
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  spec-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate spec + conformance reports
+        run: python scripts/validate_spec.py
+
+      - name: Run spec + aggregator tests
+        run: python -m pytest tests/test_validate_spec.py tests/test_aggregate_conformance.py -v

@@ -185,6 +185,14 @@ requirements:
       New in spec v0.6.0. ckeletin-rust does not yet gate releases on
       conformance verification in CI. Planned.
 
+  CKSPEC-ENF-010:
+    status: deferred
+    evidence: >
+      New in spec v0.7.0. ckeletin-rust does not yet publish a
+      machine-readable conformance report; this conformance entry is
+      still hand-authored. Deferred until ckeletin-rust publishes a
+      deterministic report that the spec aggregates (as ckeletin-go does).
+
   # ---------------------------------------------------------------------------
   # Testing (CKSPEC-TEST-001 through CKSPEC-TEST-004)
   # ---------------------------------------------------------------------------
