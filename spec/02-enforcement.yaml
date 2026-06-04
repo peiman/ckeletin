@@ -191,3 +191,78 @@ requirements:
       (Principle 9). Automatic feedback signals ensure the cycle
       closes itself — every conformance report is also a feedback
       report.
+
+  - id: CKSPEC-ENF-008
+    title: Anchored conformance evidence
+    level: MUST
+    since: v0.6.0
+    checkable: true
+    description: >
+      Every requirement a conformance report marks as met MUST be
+      anchored to verifiable evidence: either (1) an automated check
+      the report names and a verifier can run, or (2) where automation
+      is genuinely infeasible, an analysis-with-evidence that
+      references the specific artifact(s) satisfying the requirement
+      and states why no automated check is possible. A met status
+      with neither an automated check nor an analysis-with-evidence
+      anchor MUST cause the conformance generator to fail rather than
+      emit an unanchored claim.
+    rationale: >
+      Truth-Seeking (Principle 1) demands that "met" mean "shown to be
+      met", not "asserted to be met". CKSPEC-ENF-006 already requires
+      proof for enforcement-level claims above honor-system; this
+      requirement closes the remaining gap — without it a requirement
+      could be reported met with no anchor at all. Not everything can
+      be proven by an automated check (TDD ordering, editorial
+      judgment, architectural properties), so analysis-with-evidence
+      is a first-class anchor — but a bare claim is not. Anchoring
+      every met-claim strictly is what surfaces gaps: a requirement
+      that cannot be anchored is one whose conformance is actually
+      unknown. Automated Enforcement (Principle 9) requires the anchor
+      itself be machine-checked by the generator, not trusted.
+    notes: >
+      The two anchor kinds mirror the two proof kinds in
+      CKSPEC-ENF-006 (automated check ≈ violation_test;
+      analysis-with-evidence ≈ violation_evidence), extended from the
+      enforcement-mechanism claim to the met-status claim itself.
+      Strictness is deliberate: a softer rule that tolerated
+      unanchored claims would hide exactly the gaps this requirement
+      exists to reveal. The generator SHOULD report the split between
+      automated and analysis-with-evidence anchors so enforcement debt
+      stays visible (see CKSPEC-ENF-004). Discovered when ckeletin-go
+      found it could mark requirements met with neither a check nor a
+      justification — see Principle 10 (Feedback Cycle).
+
+  - id: CKSPEC-ENF-009
+    title: Conformance gate on release
+    level: MUST
+    since: v0.6.0
+    checkable: true
+    description: >
+      An implementation MUST continuously verify its conformance
+      against the latest spec version, and MUST NOT publish a release
+      while that verification fails. Conformance checking MUST be
+      wired into an automated pipeline (for example a CI/CD release
+      gate) so that drift from the latest spec blocks the release. The
+      mechanism is the implementation's choice; the guarantee — no
+      release while non-conformant — is not.
+    rationale: >
+      Automated Enforcement (Principle 9) requires that conformance be
+      verified by the pipeline, not by someone remembering to run a
+      check before tagging. A report generated only by hand drifts
+      silently between releases; tying it to the release gate makes
+      "we conform" something the pipeline proves on every release
+      rather than a claim. Truth-Seeking (Principle 1) demands the
+      conformance claim be continuously true, not true only on the day
+      it was last checked. Feedback Cycle (Principle 10) benefits
+      because drift is caught at release time, when it is cheapest to
+      address.
+    notes: >
+      "Continuously" means automated and at least gating every release
+      — not a one-time or purely manual check. HOW is the
+      implementation's choice: a CI job that runs the conformance
+      generator and fails the release on drift, a pre-release hook, or
+      a toolchain gate are all acceptable. ckeletin-go realizes this
+      with a CKSPEC Conformance CI job that the release job depends on,
+      plus a scheduled run that opens a drift issue. The spec mandates
+      the gate, not the tool.

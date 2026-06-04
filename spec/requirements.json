@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.5.0",
+  "spec_version": "0.6.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -211,6 +211,22 @@
       "checkable": true,
       "domain": "Enforcement",
       "since": "v0.3.0"
+    },
+    {
+      "id": "CKSPEC-ENF-008",
+      "title": "Anchored conformance evidence",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.6.0"
+    },
+    {
+      "id": "CKSPEC-ENF-009",
+      "title": "Conformance gate on release",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.6.0"
     },
     {
       "id": "CKSPEC-OUT-001",

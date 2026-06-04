@@ -6,8 +6,8 @@
 # 140 tests, 97% coverage, 32/35 met.
 
 implementation: ckeletin-rust
-spec_version: "0.5.0"
-report_date: "2026-06-03"
+spec_version: "0.6.0"
+report_date: "2026-06-04"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -171,6 +171,19 @@ requirements:
       or evidence. 13 feedback signals currently reported.
     tests:
       - "just conform"
+
+  CKSPEC-ENF-008:
+    status: deferred
+    evidence: >
+      New in spec v0.6.0. ckeletin-rust's conformance generator does
+      not yet fail on met-claims that lack an automated check or an
+      analysis-with-evidence anchor. Planned.
+
+  CKSPEC-ENF-009:
+    status: deferred
+    evidence: >
+      New in spec v0.6.0. ckeletin-rust does not yet gate releases on
+      conformance verification in CI. Planned.
 
   # ---------------------------------------------------------------------------
   # Testing (CKSPEC-TEST-001 through CKSPEC-TEST-004)

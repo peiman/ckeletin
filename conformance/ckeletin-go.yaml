@@ -5,8 +5,8 @@
 # Source: conformance-mapping.yaml + violation tests + automated checks.
 
 implementation: ckeletin-go
-spec_version: "0.5.0"
-report_date: "2026-06-03"
+spec_version: "0.6.0"
+report_date: "2026-06-04"
 
 requirements:
   # ---------------------------------------------------------------------------
@@ -190,6 +190,32 @@ requirements:
       enforcement level is above honor-system without proof.
       Current run: 0 feedback signals. Generator fetches
       requirement list from spec repo (with cache fallback).
+    tests:
+      - "task conform"
+
+  CKSPEC-ENF-008:
+    status: met
+    enforcement_level: script
+    evidence: >
+      conform.sh enforces an anchoring gate: every requirement claimed
+      met must carry either a runnable check or a violation_evidence /
+      analysis-with-evidence entry, otherwise the generator fails
+      rather than emit an unanchored claim. The report prints the
+      automated-vs-analysis-with-evidence split. Negative-tested:
+      stripping a met requirement's anchor fails task conform.
+    tests:
+      - "task conform"
+
+  CKSPEC-ENF-009:
+    status: met
+    enforcement_level: ci
+    evidence: >
+      .github/workflows/ci.yml defines a CKSPEC Conformance job that
+      runs task conform; the release job declares
+      needs: [test-matrix, build, conformance], so a release cannot
+      publish while conformance fails. A scheduled run opens a
+      deduplicated drift issue. Verified end-to-end via
+      workflow_dispatch with the conformance job green.
     tests:
       - "task conform"
 
