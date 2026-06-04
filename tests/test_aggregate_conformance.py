@@ -7,6 +7,7 @@ import yaml
 
 from scripts.aggregate_conformance import (
     aggregate,
+    check_drift,
     dump_conformance_yaml,
     fetch_report,
     report_to_conformance,
@@ -212,3 +213,74 @@ class TestFetchAndAggregate:
         assert written == ["ckeletin-go"]
         assert (conf_dir / "ckeletin-go.yaml").exists()
         assert not (conf_dir / "ckeletin-bad.yaml").exists()
+
+
+class TestCheckDrift:
+    """check_drift classifies each registered impl WITHOUT writing — the cheap
+    pre-check the scheduled refresh runs before doing any aggregation."""
+
+    def _aggregated(self, tmp_path, report, date="2026-06-04"):
+        """Write report.json and aggregate it into conformance/<impl>.yaml,
+        returning (conf_dir, src_path, registry)."""
+        src = tmp_path / "report.json"
+        src.write_text(json.dumps(report))
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir(exist_ok=True)
+        registry = {report["implementation"]: str(src)}
+        aggregate(str(conf_dir), date, registry=registry)
+        return conf_dir, src, registry
+
+    def test_unchanged_when_committed_matches_report(self, tmp_path):
+        conf_dir, _src, registry = self._aggregated(tmp_path, _sample_report())
+        assert check_drift(str(conf_dir), registry=registry) == {"ckeletin-go": "unchanged"}
+
+    def test_drifted_when_report_data_changes(self, tmp_path):
+        conf_dir, src, registry = self._aggregated(tmp_path, _sample_report())
+        # The published report now reports a different status — a real change.
+        changed = _sample_report()
+        changed["requirements"]["CKSPEC-ARCH-001"]["status"] = "partial"
+        src.write_text(json.dumps(changed))
+        assert check_drift(str(conf_dir), registry=registry) == {"ckeletin-go": "drifted"}
+
+    def test_report_date_difference_alone_is_not_drift(self, tmp_path):
+        # Committed snapshot stamped with an OLD date; report content identical.
+        conf_dir, _src, registry = self._aggregated(tmp_path, _sample_report(), date="2020-01-01")
+        # A re-stamp is not drift — only a real conformance change is.
+        assert check_drift(str(conf_dir), registry=registry) == {"ckeletin-go": "unchanged"}
+
+    def test_new_when_no_committed_file(self, tmp_path):
+        src = tmp_path / "report.json"
+        src.write_text(json.dumps(_sample_report()))
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir()
+        # Registered, but never aggregated → a first run is needed.
+        assert check_drift(str(conf_dir), registry={"ckeletin-go": str(src)}) == {
+            "ckeletin-go": "new"
+        }
+
+    def test_unreachable_when_source_missing(self, tmp_path):
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir()
+        registry = {"ckeletin-go": str(tmp_path / "nope.json")}
+        assert check_drift(str(conf_dir), registry=registry) == {"ckeletin-go": "unreachable"}
+
+    def test_mixed_registry_classified_independently(self, tmp_path):
+        # One unchanged, one drifted, in a single pass.
+        a = _sample_report()
+        a_src = tmp_path / "a.json"
+        a_src.write_text(json.dumps(a))
+        b = _sample_report()
+        b["implementation"] = "ckeletin-rust"
+        b_src = tmp_path / "b.json"
+        b_src.write_text(json.dumps(b))
+        conf_dir = tmp_path / "conformance"
+        conf_dir.mkdir()
+        registry = {"ckeletin-go": str(a_src), "ckeletin-rust": str(b_src)}
+        aggregate(str(conf_dir), "2026-06-04", registry=registry)
+        # ckeletin-rust's report now drifts; ckeletin-go's does not.
+        b["requirements"]["CKSPEC-ENF-001"]["status"] = "deferred"
+        b_src.write_text(json.dumps(b))
+        assert check_drift(str(conf_dir), registry=registry) == {
+            "ckeletin-go": "unchanged",
+            "ckeletin-rust": "drifted",
+        }

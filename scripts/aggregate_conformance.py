@@ -162,6 +162,43 @@ def aggregate(conformance_dir, report_date, only_impl=None, registry=None):
     return written, failed
 
 
+def check_drift(conformance_dir, registry=None):
+    """Classify each registered implementation WITHOUT writing anything.
+
+    Returns ``{impl: status}`` where status is one of:
+      - ``"unchanged"``   — the committed snapshot already matches the report
+      - ``"drifted"``     — the report's conformance DATA changed (status/evidence/…)
+      - ``"new"``         — registered but never aggregated (no committed file yet)
+      - ``"unreachable"`` — the report could not be fetched or parsed
+
+    ``report_date`` is ignored: the published report is timestamp-free, and the
+    committed snapshot's own date is reused for the comparison, so a re-stamp is
+    never reported as drift — only a real conformance change is. This is the
+    cheap pre-check the scheduled refresh runs before doing any aggregation.
+    """
+    registry = PUBLISHED_REPORTS if registry is None else registry
+    results = {}
+    for impl, source in registry.items():
+        out_path = os.path.join(conformance_dir, f"{impl}.yaml")
+        try:
+            report = fetch_report(source)
+        except (urllib.error.URLError, OSError, ValueError):
+            results[impl] = "unreachable"
+            continue
+        if not os.path.exists(out_path):
+            results[impl] = "new"
+            continue
+        try:
+            with open(out_path, "r") as f:
+                committed = yaml.safe_load(f)
+            committed_date = (committed or {}).get("report_date", "")
+            fresh = report_to_conformance(report, committed_date)
+            results[impl] = "unchanged" if fresh == committed else "drifted"
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            results[impl] = "unreachable"
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -179,11 +216,35 @@ def main():
         action="store_true",
         help="exit non-zero if any registered report could not be fetched",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="dry run: do not write. Print implementations whose published report "
+        "has drifted from (or is missing) its committed snapshot — one name per "
+        "line on stdout, with the full per-impl summary on stderr. This is the "
+        "cheap pre-check the scheduled refresh runs before aggregating.",
+    )
     args = parser.parse_args()
 
     report_date = args.date or datetime.date.today().isoformat()
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     conformance_dir = os.path.join(repo_root, "conformance")
+
+    if args.check:
+        results = check_drift(conformance_dir)
+        needs_refresh = [impl for impl, st in results.items() if st in ("drifted", "new")]
+        for impl, st in results.items():
+            print(f"  {impl}: {st}", file=sys.stderr)
+        print(
+            f"Checked {len(results)} report(s); {len(needs_refresh)} need refresh.",
+            file=sys.stderr,
+        )
+        # Machine-readable: drifted/new impl names, one per line, on stdout.
+        for impl in needs_refresh:
+            print(impl)
+        if args.strict and any(st == "unreachable" for st in results.values()):
+            sys.exit(1)
+        return
 
     written, failed = aggregate(conformance_dir, report_date, only_impl=args.impl)
 
