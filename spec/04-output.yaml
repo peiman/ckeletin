@@ -34,6 +34,7 @@ requirements:
     title: Machine-readable output mode
     level: MUST
     since: v0.2.0
+    modified: v0.8.0
     checkable: true
     description: >
       Every command MUST support a machine-readable output mode
@@ -47,6 +48,16 @@ requirements:
       building protocol layers. A flag is simpler than a server.
       Truth-Seeking (Principle 1) — structured output is unambiguous,
       unlike human-formatted text that requires pattern matching.
+    notes: >
+      Flag convention (SHOULD): implementations SHOULD activate the mode
+      with `--output <format>`, using `text` (default) and `json` as the
+      standard values; additional formats (`yaml`, `table`) MAY be added
+      as values. The MUST above is the machine-readable mode itself; the
+      flag *name* is the SHOULD — so an agent can drive any ckeletin CLI
+      with the same flag instead of discovering `--json` vs `--format
+      json` per tool. Both reference implementations converged on
+      `--output text|json` independently (Feedback Cycle, Principle 10);
+      ckeletin-rust started with a boolean `--json` and switched to match.
 
   - id: CKSPEC-OUT-003
     title: Standardized output envelope
