@@ -15,7 +15,7 @@ retrospectives, not audits.
 
 ## Current State
 
-Six domains, verified against one implementation:
+Six domains, verified against the reference implementations:
 
 | # | Domain | Requirements | Platform it creates |
 |---|--------|-------------|---------------------|
@@ -30,10 +30,20 @@ Each domain is a platform for the ones after it. The order matters.
 
 ## Implementations
 
-| Implementation | Language | Conformance |
+| Implementation | Language | Conformance report |
 |---------------|----------|-------------|
-| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | 32/32 met |
-| ckeletin-rust | Rust | Planned |
+| [ckeletin-go](https://github.com/peiman/ckeletin-go) | Go | [`conformance/ckeletin-go.yaml`](conformance/ckeletin-go.yaml) |
+| [ckeletin-rust](https://github.com/peiman/ckeletin-rust) | Rust | [`conformance/ckeletin-rust.yaml`](conformance/ckeletin-rust.yaml) |
+
+Which requirements each implementation meets is **not duplicated here** — it
+lives in the auto-generated reports under [`conformance/`](conformance/), the
+single source of truth (one report per implementation, regenerated from each
+implementation's published conformance data). A hand-copied status drifts the
+moment an implementation ships a change — this table once read
+"ckeletin-rust: Planned" long after Rust had become the most advanced
+implementation. So the README links to the live reports rather than restating
+them — Single Source of Truth (a derived/linked fact can't drift; a hand-copied
+one will).
 
 ## Validation
 
@@ -41,7 +51,7 @@ Requires [Task](https://taskfile.dev/installation/) and Python 3.
 
 ```bash
 task check       # validate spec + conformance
-task test        # run test suite (23 tests)
+task test        # run test suite
 ```
 
 First run creates a virtual environment and installs dependencies
@@ -79,7 +89,8 @@ spec/
   05-agent-readiness.yaml  — AGENTS.md, provider guides, CLI interface
   06-changelog.yaml        — Keep a Changelog, SemVer
 conformance/
-  ckeletin-go.yaml         — Go conformance report
+  <implementation>.yaml    — one auto-generated report per implementation
+                             (e.g. ckeletin-go.yaml, ckeletin-rust.yaml)
 research/                  — Source research behind requirements
 principles.md              — Derives from the Manifesto
 ```
