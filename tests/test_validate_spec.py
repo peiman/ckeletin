@@ -288,11 +288,35 @@ class TestConformanceWarnings:
         )
 
 
+def _independent_id_count(spec_dir):
+    """Count `- id: CKSPEC-*` entries by scanning the raw YAML — an independent
+    cross-check of the collector that does NOT go stale when a requirement is
+    added (unlike a hardcoded count, which goes *quietly* red on the next bump)."""
+    import glob
+    import re
+
+    total = 0
+    for path in glob.glob(os.path.join(spec_dir, "*.yaml")):
+        if os.path.basename(path).startswith("_"):  # skip _schema.yaml
+            continue
+        with open(path) as f:
+            total += len(re.findall(r"^\s*-\s*id:\s*CKSPEC-", f.read(), re.MULTILINE))
+    return total
+
+
 class TestRequirementsGeneration:
     def test_collect_all_requirements_count(self, spec_dir):
-        """Must collect all 40 requirements from spec files."""
+        """Collector must find every requirement defined in the YAML and no
+        duplicates — derived, never a magic number, so adding a requirement
+        can't silently break this test."""
         reqs = collect_all_requirements(spec_dir)
-        assert len(reqs) == 40, f"Expected 40 requirements, got {len(reqs)}"
+        ids = [r["id"] for r in reqs]
+        assert len(reqs) == _independent_id_count(spec_dir), (
+            "collector count disagrees with the raw YAML id count — a requirement "
+            "was dropped or double-counted"
+        )
+        assert len(ids) == len(set(ids)), f"duplicate requirement IDs: {ids}"
+        assert reqs, "expected a non-empty requirement set"
 
     def test_collect_all_requirements_has_required_fields(self, spec_dir):
         """Every collected requirement must have id, title, level, checkable, domain, since."""
@@ -340,13 +364,17 @@ class TestRequirementsGeneration:
         assert "spec_version" in data
         assert "requirements" in data
         assert isinstance(data["requirements"], list)
-        assert len(data["requirements"]) == 40
+        # Generated list must match the collector exactly (derived, not a magic number).
+        assert len(data["requirements"]) == len(collect_all_requirements(spec_dir))
 
     def test_generate_requirements_data_spec_version(self, spec_dir):
-        """Spec version must match highest version in requirements."""
+        """Generated spec_version must be the derivation applied to the real
+        requirements — verifies the wiring without hardcoding a version that
+        goes stale on every bump. (The derivation logic itself is covered by
+        test_derive_spec_version with synthetic data.)"""
         data = generate_requirements_data(spec_dir)
-        # v0.8.0 is the highest (CKSPEC-AGENT-006 since: v0.8.0)
-        assert data["spec_version"] == "0.8.0"
+        expected = _derive_spec_version(collect_all_requirements(spec_dir))
+        assert data["spec_version"] == expected
 
     def test_generate_requirements_data_deterministic(self, spec_dir):
         """Two calls must produce identical output."""
