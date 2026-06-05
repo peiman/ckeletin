@@ -258,7 +258,8 @@
       "level": "MUST",
       "checkable": true,
       "domain": "Output",
-      "since": "v0.2.0"
+      "since": "v0.2.0",
+      "modified": "v0.8.0"
     },
     {
       "id": "CKSPEC-OUT-003",
