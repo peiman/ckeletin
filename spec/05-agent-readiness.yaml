@@ -97,3 +97,62 @@ requirements:
       Platforms, Not Features (Principle 5) — the CLI and structured
       output are the platform; protocol wrappers are optional
       features built on that platform.
+
+  - id: CKSPEC-AGENT-006
+    title: Machine-readable command catalog
+    level: SHOULD
+    since: v0.8.0
+    checkable: true
+    description: >
+      The CLI SHOULD expose its own command surface as machine-
+      readable structured data — a catalog enumerating every command,
+      its subcommands, flags, and which are required — emitted through
+      the machine-readable output mode (CKSPEC-OUT-002): the catalog
+      is the `data` of a success envelope, not a new output mode. The
+      catalog MUST be DERIVED from the actual command definitions,
+      never hand-maintained. Hidden commands and flags MAY be
+      excluded; commands that accept external (dynamically-resolved)
+      subcommands SHOULD indicate this rather than enumerate the
+      unknowable. CKSPEC-OUT-002 makes a command's RESULT machine-
+      readable; this makes the command SURFACE machine-readable.
+    rationale: >
+      Single Source of Truth (Principle 7) — AGENTS.md
+      (CKSPEC-AGENT-001) documents the command surface in prose, which
+      drifts from the code. A catalog derived from the command
+      definitions cannot drift: it IS the command set. Truth-Seeking
+      (Principle 1) — an agent discovers capabilities from structured
+      data the binary self-reports, not by parsing human `--help`
+      text. Feedback Cycle (Principle 10) — surfaced by ckeletin-rust
+      while building haft, whose runtime-extensible command set makes
+      a hand-written AGENTS.md surface impossible to keep current.
+    notes: >
+      Cross-implementation schema (agreed between the rust and go
+      reference implementations on issue #9): a REQUIRED CORE both
+      derive losslessly, plus OPTIONAL fields each emits where its CLI
+      framework exposes them. Optional fields are omitted, never
+      hand-filled, so "met" always means "derived". An agent's single
+      parser keys off the required core; optional fields are
+      best-effort enrichment.
+
+      Required core — top level: name, description, global_flags
+      (listed once, not duplicated per command), commands. Each
+      command: name, description, flags, commands (recursive). Each
+      flag: long, required, takes_value — a normalized
+      value-consumes-vs-boolean-switch flag, the lossless
+      intersection, NOT a rich type string (which clap cannot derive).
+
+      Optional (emit where derivable): flag short, description,
+      default, possible_values (enumerated values), rich type; command
+      aliases, valid_args, positional_args, external_subcommands.
+
+      Enforcement is a REGRESSION test, not a coverage-gap test: when
+      the catalog is derived from the same command tree the parser
+      uses (clap derive, cobra), the two cannot disagree, so a
+      "command added without catalog coverage" failure mode is
+      structurally impossible. A runtime-registry CLI (e.g. haft)
+      derives from its registry, where a forgotten registration IS
+      possible, so there the honest enforcement is a
+      registration-completeness test. SHOULD, not MUST: a small
+      single-command CLI gains little and AGENTS.md
+      (CKSPEC-AGENT-004) remains the baseline; the benefit scales with
+      surface size.
