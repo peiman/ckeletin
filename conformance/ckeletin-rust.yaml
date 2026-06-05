@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.7.0
-report_date: '2026-06-04'
+spec_version: 0.8.0
+report_date: '2026-06-05'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -49,6 +49,20 @@ requirements:
     - cargo test -p cli --test cli
     violation_evidence: crates/cli/tests/cli.rs JSON-mode tests exercise the --output json
       agent interface end to end; a regression fails them in CI (`just check`).
+  CKSPEC-AGENT-006:
+    status: met
+    evidence: A `catalog` command emits the cross-impl catalog schema via the OUT-002 envelope,
+      derived from the clap command tree (Cli::command()). Schema types in the framework crate
+      (ckeletin::catalog, re-exported via infrastructure); clap walk in crates/cli/src/catalog.rs.
+    enforcement_level: script
+    tests:
+    - cargo test -p cli --test cli catalog
+    violation_evidence: The catalog is derived from the SAME clap Command tree the parser
+      uses, so it cannot drift from the command set (anti-drift is structural). crates/cli/tests/cli.rs
+      catalog_* tests assert the emitted catalog is a valid OUT-002 success envelope that
+      lists every subcommand (incl. catalog itself) with global flags carrying takes_value;
+      framework unit tests in .ckeletin/crate/src/catalog.rs cover serialization. A regression
+      fails them in CI (`just check`).
   CKSPEC-ARCH-001:
     status: met
     evidence: 'Cargo workspace members: crates/domain, crates/infrastructure, crates/cli,
