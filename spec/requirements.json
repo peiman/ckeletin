@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.7.0",
+  "spec_version": "0.8.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -40,6 +40,14 @@
       "checkable": false,
       "domain": "Agent Readiness",
       "since": "v0.2.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-006",
+      "title": "Machine-readable command catalog",
+      "level": "SHOULD",
+      "checkable": true,
+      "domain": "Agent Readiness",
+      "since": "v0.8.0"
     },
     {
       "id": "CKSPEC-ARCH-001",
