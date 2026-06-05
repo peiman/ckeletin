@@ -290,9 +290,9 @@ class TestConformanceWarnings:
 
 class TestRequirementsGeneration:
     def test_collect_all_requirements_count(self, spec_dir):
-        """Must collect all 39 requirements from spec files."""
+        """Must collect all 40 requirements from spec files."""
         reqs = collect_all_requirements(spec_dir)
-        assert len(reqs) == 39, f"Expected 39 requirements, got {len(reqs)}"
+        assert len(reqs) == 40, f"Expected 40 requirements, got {len(reqs)}"
 
     def test_collect_all_requirements_has_required_fields(self, spec_dir):
         """Every collected requirement must have id, title, level, checkable, domain, since."""
@@ -340,13 +340,13 @@ class TestRequirementsGeneration:
         assert "spec_version" in data
         assert "requirements" in data
         assert isinstance(data["requirements"], list)
-        assert len(data["requirements"]) == 39
+        assert len(data["requirements"]) == 40
 
     def test_generate_requirements_data_spec_version(self, spec_dir):
         """Spec version must match highest version in requirements."""
         data = generate_requirements_data(spec_dir)
-        # v0.7.0 is the highest (CKSPEC-ENF-010 since: v0.7.0)
-        assert data["spec_version"] == "0.7.0"
+        # v0.8.0 is the highest (CKSPEC-AGENT-006 since: v0.8.0)
+        assert data["spec_version"] == "0.8.0"
 
     def test_generate_requirements_data_deterministic(self, spec_dir):
         """Two calls must produce identical output."""
