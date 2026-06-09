@@ -100,12 +100,53 @@ conformance_entry:
     enforcement_level:
       type: enum
       required: false
-      values: [compile-time, linter, sast, script, ci, honor-system]
+      values: [compile-time, linter, sast, script, ci, design, honor-system]
       description: >
         Where on the enforcement ladder (CKSPEC-ENF-002) this
         requirement is verified. Implementations SHOULD report the
         strongest level that applies. Omit for non-checkable
         requirements reported via attestation.
+      level_definitions:
+        compile-time: >
+          The language toolchain rejects violating code at compile time.
+          A valid violation_test MUST be a compile-fail test (e.g.,
+          trybuild for Rust). A violation_evidence claiming compile-time
+          enforcement MUST reference the specific dependency omission
+          (Cargo.toml, go.mod) that makes the import structurally
+          impossible. Runtime checks, linter passes, and script checks
+          do NOT qualify.
+        linter: >
+          A configured linter (clippy, golangci-lint, etc.) catches
+          violations as part of the standard check pipeline. Evidence
+          MUST reference the specific lint rule and its configuration
+          location (e.g., `[lints.clippy] print_stdout = "deny"` in
+          Cargo.toml). A violation_test or violation_evidence MUST
+          demonstrate the linter catches the violation.
+        sast: >
+          A static analysis tool beyond the standard linter (e.g.,
+          semgrep, cargo-geiger). Evidence MUST reference the tool,
+          version, and the rule that catches the violation.
+        script: >
+          A script, recipe, or conformance generator enforces the rule
+          as part of the standard check pipeline. Evidence MUST
+          reference the script/recipe name and the check it performs.
+          A violation_test or violation_evidence MUST show the script
+          exits non-zero on a violation.
+        ci: >
+          Enforcement fires only in CI (not locally). Evidence MUST
+          reference the CI job name and configuration file. Use only
+          when local enforcement is genuinely infeasible.
+        design: >
+          Enforcement is structural or architectural — the enforcement
+          IS the design (e.g., file layout, build configuration) rather
+          than a runtime or tooling check. Use when compile-time,
+          linter, script, and CI levels are not achievable. A
+          violation_evidence MUST describe the structural property that
+          constitutes the enforcement.
+        honor-system: >
+          No automated enforcement. Evidence is an
+          analysis-with-justification explaining why automation is not
+          feasible. No violation_test is required or expected.
     violation_test:
       type: string
       required: false

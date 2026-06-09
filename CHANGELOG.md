@@ -9,6 +9,12 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Added
 
+- `_schema.yaml` enforcement-level vocabulary definitions — each `enforcement_level` value now has a precise definition specifying what kind of evidence it requires. `design` added as a recognized level (used in practice by both implementations). Discovered through ckeletin-rust review (PR #32): `compile-time` was over-claimed for OUT-005 (linter enforcement) and ARCH-006 (design-level enforcement); corrected after the fact without tooling to prevent future mis-claims. See spec issue #16.
+
+### Changed
+
+- `_schema.yaml` `enforcement_level` enum: added `design` as a valid value (was already used in conformance reports but not listed in the schema enum).
+
 - Scheduled conformance refresh (`.github/workflows/refresh-conformance.yml`) — a daily job that detects when a registered implementation's published `conformance-report.json` has drifted from its committed `conformance/<impl>.yaml`, then regenerates only the changed snapshots and opens a PR. Pull-based: the spec repo owns `PUBLISHED_REPORTS`, so it polls — no implementation needs a cross-repo token. The detection is a new `aggregate_conformance.py --check` dry-run (also `task check:conformance`) that compares report content while ignoring `report_date`, so a re-stamp is never mistaken for a conformance change. The job runs `validate_spec.py` before opening the PR (a GITHUB_TOKEN PR does not re-trigger spec-check). Covered by `tests/test_aggregate_conformance.py::TestCheckDrift`.
 - Conformance evidence + release-gate requirements (CKSPEC-ENF-008, CKSPEC-ENF-009) — every met-claim MUST be anchored to an automated check or an analysis-with-evidence entry (no unanchored claims), and implementations MUST continuously verify conformance and gate releases on it (e.g. a CI/CD conformance gate); bumps spec to v0.6.0. Met by ckeletin-go (conform.sh anchoring gate + a CKSPEC Conformance CI job the release job depends on); deferred by ckeletin-rust.
 - Build identity requirement (CKSPEC-OUT-006) — version output MUST surface version + commit + date + dirty, degrading unavailable fields to "unknown"; bumps spec to v0.5.0. Satisfied by ckeletin-go (-ldflags) and ckeletin-rust (build script + `version` command).
