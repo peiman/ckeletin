@@ -20,7 +20,7 @@ requirements:
       insufficient — tooling catches violations consistently,
       regardless of who wrote the code or when.
     rationale: >
-      Automated Enforcement (Principle 2) is the keystone: rules
+      Automated Enforcement (Principle 9) is the keystone: rules
       without enforcement erode silently. New contributors may not
       read every decision document. Automation ensures decisions
       survive team changes, time pressure, and human error.
@@ -44,13 +44,13 @@ requirements:
       (5) CI-only check, (6) honor system (last resort). Higher
       levels catch violations earlier and cost less to maintain.
     rationale: >
-      Automated Enforcement (Principle 2) prefers mechanisms that
+      Automated Enforcement (Principle 9) prefers mechanisms that
       catch violations as early as possible. Compile-time enforcement
       is free — violations don't build. Linter enforcement catches
       issues in the editor. Script-based checks run at commit time.
       CI catches what slips through. Honor system relies entirely on
       human discipline and fails under time pressure. Lean Iteration
-      (Principle 3) favors the mechanism with the shortest feedback
+      (Principle 4) favors the mechanism with the shortest feedback
       loop.
     notes: >
       The achievable enforcement level for a given requirement varies
@@ -94,7 +94,7 @@ requirements:
       coverage visible at a glance. It reveals patterns — many
       honor-system entries signal enforcement debt — and drives
       investment in automation where it matters most. Automated
-      Enforcement (Principle 2) requires knowing where automation
+      Enforcement (Principle 9) requires knowing where automation
       is missing before it can be added.
 
   - id: CKSPEC-ENF-005

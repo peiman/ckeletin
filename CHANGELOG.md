@@ -7,7 +7,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
-### Added
+### Fixed
+
+- Stale principle numbers in `spec/01-architecture.yaml`, `spec/02-enforcement.yaml`, and `spec/03-testing.yaml` — the principles were renumbered when restructured (CHANGELOG: "Principles restructured — derives from Manifesto"), but the older requirements still cited pre-restructuring numbers. Corrected: "Automated Enforcement (Principle 2)" → Principle 9; "Lean Iteration (Principle 3)" → Principle 4; "Platforms, Not Features (Principle 4)" → Principle 5; "Separation of Concerns (Principle 5)" → Principle 8; "Framework Independence (Principle 6)" (no longer exists — was folded into Separation of Concerns) → "Separation of Concerns (Principle 8)". Names in parentheses were correct throughout; only numbers were stale. Closes spec issue #21.
 
 - Scheduled conformance refresh (`.github/workflows/refresh-conformance.yml`) — a daily job that detects when a registered implementation's published `conformance-report.json` has drifted from its committed `conformance/<impl>.yaml`, then regenerates only the changed snapshots and opens a PR. Pull-based: the spec repo owns `PUBLISHED_REPORTS`, so it polls — no implementation needs a cross-repo token. The detection is a new `aggregate_conformance.py --check` dry-run (also `task check:conformance`) that compares report content while ignoring `report_date`, so a re-stamp is never mistaken for a conformance change. The job runs `validate_spec.py` before opening the PR (a GITHUB_TOKEN PR does not re-trigger spec-check). Covered by `tests/test_aggregate_conformance.py::TestCheckDrift`.
 - Conformance evidence + release-gate requirements (CKSPEC-ENF-008, CKSPEC-ENF-009) — every met-claim MUST be anchored to an automated check or an analysis-with-evidence entry (no unanchored claims), and implementations MUST continuously verify conformance and gate releases on it (e.g. a CI/CD conformance gate); bumps spec to v0.6.0. Met by ckeletin-go (conform.sh anchoring gate + a CKSPEC Conformance CI job the release job depends on); deferred by ckeletin-rust.
