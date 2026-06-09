@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.8.0",
+  "spec_version": "0.9.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -243,6 +243,14 @@
       "checkable": true,
       "domain": "Enforcement",
       "since": "v0.7.0"
+    },
+    {
+      "id": "CKSPEC-ENF-011",
+      "title": "Evidence anchor validity",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Enforcement",
+      "since": "v0.9.0"
     },
     {
       "id": "CKSPEC-OUT-001",

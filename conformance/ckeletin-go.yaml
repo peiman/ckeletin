@@ -307,6 +307,12 @@ requirements:
     - grep -q 'out of sync' .ckeletin/scripts/conform.sh
     violation_tests:
     - test/conformance/violation_test.go::TestViolation_ConformReport_OutOfSyncRejected
+  CKSPEC-ENF-011:
+    status: deferred
+    evidence: >
+      ckeletin-go conform tooling does not yet implement file-path anchor
+      existence or symbol-presence validation. Deferred pending spec
+      stabilization of CKSPEC-ENF-011.
   CKSPEC-OUT-001:
     status: met
     evidence: ADR-013 defines 3-stream model. Logger writes console to stderr, file to JSON.

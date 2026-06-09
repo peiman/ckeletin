@@ -301,3 +301,42 @@ requirements:
       sync-guarded by task conform) which the spec repo's
       aggregate_conformance.py consumes. HOW is the implementation's
       choice; the published, aggregatable report is not.
+
+  - id: CKSPEC-ENF-011
+    title: Evidence anchor validity
+    level: MUST
+    since: v0.9.0
+    checkable: true
+    description: >
+      Conformance tooling MUST validate evidence anchors, not merely
+      their presence. Specifically: (1) a file-path anchor MUST be
+      verified to exist on disk at generator run time; (2) a
+      file-and-symbol anchor (e.g., "foo.rs::bar_function") MUST be
+      verified to contain the named symbol; (3) an anchor that fails
+      validation MUST cause the generator to fail, as if the anchor
+      were absent. A non-empty anchor string that points to a
+      non-existent file or missing symbol is no better than no anchor.
+    rationale: >
+      Truth-Seeking (Principle 1) demands that anchors be verifiable,
+      not merely present. CKSPEC-ENF-008 requires anchors; without
+      validity checks, a conformance mapping can satisfy ENF-008 with
+      an anchor that refers to a renamed or deleted test — producing
+      false confidence that the evidence exists. Automated Enforcement
+      (Principle 9) requires the validity check itself be machine-run
+      by the generator on every conformance check. Discovered when
+      ckeletin-rust renamed a shadow-log test (PR #31) and the
+      conformance mapping continued to cite the old name — the anchor
+      was present but dangling; the generator accepted it silently.
+      Fixed in PR #32; see Principle 10 (Feedback Cycle).
+    notes: >
+      "File-path anchor" means any evidence string that contains a
+      path separator (`/`) and a file extension recognized as a source
+      file (`.rs`, `.go`, `.toml`, `.yaml`, etc.). A file-and-symbol
+      anchor is the form `path/to/file.rs::symbol_name`. Generators
+      MAY apply heuristics to identify anchor-like strings within
+      longer prose evidence; they MUST NOT silently skip strings that
+      appear to be anchors. The check is at generator run time against
+      the local file system — not against the published report — so
+      it catches renames before they propagate. Discovered through
+      cross-implementation review of ckeletin-rust; see ckeletin-rust
+      PR #32.

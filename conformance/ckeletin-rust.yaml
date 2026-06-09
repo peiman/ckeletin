@@ -271,6 +271,13 @@ requirements:
     violation_evidence: Unit tests report_projection_is_deterministic / sync_check_detects_drift
       in .ckeletin/conform/src/main.rs prove the report is a stable projection and that drift
       fails the gate; conformance-report.json is the published artifact.
+  CKSPEC-ENF-011:
+    status: deferred
+    evidence: >
+      ckeletin-rust already implements anchor existence and symbol-presence
+      validation in .ckeletin/conform/src/main.rs (PR #32 dangling-anchor
+      gate). Formal conformance claim deferred pending spec stabilization
+      of CKSPEC-ENF-011.
   CKSPEC-OUT-001:
     status: met
     evidence: 'output.rs: stdout (data), stderr (tracing status), log file (tracing audit).'
