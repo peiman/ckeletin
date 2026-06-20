@@ -40,6 +40,12 @@ tasks:
     cmds:
       - '{{.PYTHON}} scripts/aggregate_conformance.py --check'
 
+  feedback:check:
+    desc: Enforce the spec feedback cycle (register triaged+decided; consumers conform)
+    deps: [setup]
+    cmds:
+      - '{{.PYTHON}} scripts/check_feedback.py'
+
   test:
     desc: Run validation tests
     deps: [setup]

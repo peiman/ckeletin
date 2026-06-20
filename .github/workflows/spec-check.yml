@@ -31,4 +31,7 @@ jobs:
         run: python scripts/validate_spec.py
 
       - name: Run spec + aggregator tests
-        run: python -m pytest tests/test_validate_spec.py tests/test_aggregate_conformance.py -v
+        run: python -m pytest tests/test_validate_spec.py tests/test_aggregate_conformance.py tests/test_check_feedback.py -v
+
+      - name: Enforce the feedback cycle
+        run: python scripts/check_feedback.py
