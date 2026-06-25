@@ -171,10 +171,15 @@ requirements:
       the project itself, e.g. a conformance report), or upstream-only
       (meaningful only in the reference implementation, e.g. its conformance
       reports, spec-feedback, and development plans). The scaffold/init step
-      MUST ensure upstream-only artifacts are removed, reset, or explicitly
-      marked upstream-only, so a derived project never inherits
-      generated-evidence or reference-only prose that describes the reference
-      implementation rather than itself.
+      MUST dispose of upstream-only artifacts by removing, resetting, marking
+      them upstream-only, or — for artifacts inside the framework's
+      replace-on-update area — guarding them so they are inert in the derived
+      project, so a derived project never inherits generated-evidence or
+      reference-only prose that describes the reference implementation rather
+      than itself. An inherited upstream-only gate (e.g. a conformance CI job)
+      MUST NOT block the derived project's own release: it MUST be
+      subject-gated — skip, or no-op and declare its subject — never hard-fail
+      (see CKSPEC-ENF-009).
     rationale: >
       Single Source of Truth (Principle 7) — a derived project's artifacts
       must describe THAT project; an inherited conformance report or review
@@ -186,14 +191,20 @@ requirements:
       boundary must be enforced by the scaffold/init mechanism, not left to
       the deriver to remember.
     notes: >
-      Ownership is by LOCATION; applicability is a separate axis. An artifact
-      can be framework-owned (it lives in the framework's reserved area and is
-      replaced on update) yet upstream-only in APPLICABILITY — meaningful only
-      in the reference implementation, e.g. an init smoke test that asserts the
-      scaffold's worked example survives init. Such an artifact need not be
-      stripped file-by-file out of the framework area; it MUST be inert in a
-      derived project (e.g. guarded to no-op) so it cannot assert
-      reference-only truth there.
+      Ownership is by LOCATION; applicability is a separate axis, and the two
+      together decide the disposition:
+        - framework-owned and consumer-applicable (e.g. the architecture-
+          enforcement tests that police the derived project's OWN layering)
+          stay ACTIVE — stripping them would delete the enforcement the
+          scaffold exists to provide;
+        - framework-owned but upstream-only in applicability (e.g. an init
+          smoke test that asserts the scaffold's worked example survives init,
+          or a conformance-report generator and its guard) are kept but made
+          INERT — guarded to no-op in a derived project — NOT stripped
+          file-by-file, because the framework area is replaced wholesale on
+          update and a stripped file simply returns on the next update;
+        - outside the framework area (e.g. a root-level generated conformance
+          report or reference-only prose) is removed or reset.
 
       Generated-evidence handling: deletion is preferred over stamping for a
       regenerable conformance report — a stale inherited report is worse than
@@ -204,7 +215,14 @@ requirements:
       Surfaced by the a0 dogfooding round (issue #30): scaffolding from
       ckeletin-rust dragged its own CONFORMANCE.md, conformance report and
       mapping, and spec-feedback/plan docs into the derived project, where they
-      read as authoritative about that project. Both reference implementations
-      strip these at init — ckeletin-rust's init.sh deletes the generated
-      conformance evidence and upstream-only prose while keeping .ckeletin/
-      (framework-owned) and ckeletin-project.toml (consumer-owned).
+      read as authoritative about that project. The two reference
+      implementations reached the same boundary by different routes:
+      ckeletin-go strips its conformance/violation artifacts at init;
+      ckeletin-rust deletes the root-level generated evidence and upstream-only
+      prose but KEEPS the framework area (.ckeletin/) and consumer config
+      (ckeletin-project.toml), guarding the upstream-only pieces to no-op — its
+      conform recipes exit 0 with an announce when the upstream slug is absent
+      from the manifest, and its upstream-only CI job is gated on repository
+      identity, so a derived project's release is never blocked. The spec
+      blesses guarded-inert as the portable rule for the replace-on-update
+      area, and delete/reset for artifacts outside it.
