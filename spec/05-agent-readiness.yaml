@@ -156,3 +156,55 @@ requirements:
       single-command CLI gains little and AGENTS.md
       (CKSPEC-AGENT-004) remains the baseline; the benefit scales with
       surface size.
+
+  - id: CKSPEC-AGENT-007
+    title: Scaffold artifact ownership boundary
+    level: MUST
+    since: v0.9.0
+    checkable: true
+    description: >
+      A project derived by scaffolding from a reference implementation MUST
+      NOT present the reference implementation's truth as its own.
+      Implementations MUST classify every scaffold artifact by ownership:
+      framework-owned (the framework's, replaced on update), consumer-owned
+      (the derived project's to edit), generated-evidence (regenerated from
+      the project itself, e.g. a conformance report), or upstream-only
+      (meaningful only in the reference implementation, e.g. its conformance
+      reports, spec-feedback, and development plans). The scaffold/init step
+      MUST ensure upstream-only artifacts are removed, reset, or explicitly
+      marked upstream-only, so a derived project never inherits
+      generated-evidence or reference-only prose that describes the reference
+      implementation rather than itself.
+    rationale: >
+      Single Source of Truth (Principle 7) — a derived project's artifacts
+      must describe THAT project; an inherited conformance report or review
+      doc that silently describes the reference implementation is a second,
+      false source of truth. Truth-Seeking (Principle 1) — an agent reading
+      the universal guide and its neighbours (CKSPEC-AGENT-001) will act on
+      an inherited CONFORMANCE.md or report whose claims were never true of
+      the project it is working in. Automated Enforcement (Principle 9) — the
+      boundary must be enforced by the scaffold/init mechanism, not left to
+      the deriver to remember.
+    notes: >
+      Ownership is by LOCATION; applicability is a separate axis. An artifact
+      can be framework-owned (it lives in the framework's reserved area and is
+      replaced on update) yet upstream-only in APPLICABILITY — meaningful only
+      in the reference implementation, e.g. an init smoke test that asserts the
+      scaffold's worked example survives init. Such an artifact need not be
+      stripped file-by-file out of the framework area; it MUST be inert in a
+      derived project (e.g. guarded to no-op) so it cannot assert
+      reference-only truth there.
+
+      Generated-evidence handling: deletion is preferred over stamping for a
+      regenerable conformance report — a stale inherited report is worse than
+      its absence. The project regenerates its own, or, for a consumer that is
+      not itself a ckeletin implementation, generates none (see the gate
+      subject in CKSPEC-ENF-009).
+
+      Surfaced by the a0 dogfooding round (issue #30): scaffolding from
+      ckeletin-rust dragged its own CONFORMANCE.md, conformance report and
+      mapping, and spec-feedback/plan docs into the derived project, where they
+      read as authoritative about that project. Both reference implementations
+      strip these at init — ckeletin-rust's init.sh deletes the generated
+      conformance evidence and upstream-only prose while keeping .ckeletin/
+      (framework-owned) and ckeletin-project.toml (consumer-owned).

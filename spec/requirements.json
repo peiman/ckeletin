@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.8.0",
+  "spec_version": "0.9.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -48,6 +48,14 @@
       "checkable": true,
       "domain": "Agent Readiness",
       "since": "v0.8.0"
+    },
+    {
+      "id": "CKSPEC-AGENT-007",
+      "title": "Scaffold artifact ownership boundary",
+      "level": "MUST",
+      "checkable": true,
+      "domain": "Agent Readiness",
+      "since": "v0.9.0"
     },
     {
       "id": "CKSPEC-ARCH-001",
