@@ -30,6 +30,15 @@ requirements:
       separation prevents a specific kind of drift. Platforms, Not Features
       (Principle 5) demands that each layer is a stable platform for the
       layers above it.
+    notes: >
+      Layer projections (FB-003): a project organizes source into these four
+      layers, but a layer MAY be empty or absent when the project honestly has
+      no code for it — e.g. a CLI with no shared-services code declares an empty
+      Infrastructure layer rather than inventing one to look conformant. A
+      conformant report declares which layers are populated; an absent or empty
+      layer is a valid projection, not a violation. This documents existing
+      behavior — the reference implementations already treat an unpopulated
+      layer as conformant.
 
   - id: CKSPEC-ARCH-002
     title: Directed dependencies
