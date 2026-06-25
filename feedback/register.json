@@ -26,9 +26,9 @@
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-ARCH-001",
       "summary": "ARCH-001 mandates four layers (Entry, Command, Business Logic, Infrastructure) and ARCH-002/004/005 assume that shape, but real consumers need honest deviations the spec has not caught up to — e.g. ckeletin-rust already learned a consumer may legitimately declare infrastructure = [] (no shared-services layer). Written as universal, the four-layer rule forces consumers either to fake a layer or to look non-conformant when they are honestly simpler/different. Refs: spec/01-architecture.yaml:19, spec/01-architecture.yaml:40, spec/01-architecture.yaml:82.",
-      "status": "discussing",
-      "decision": "discuss",
-      "rationale": "Proposed (to discuss): either scope the four-layer MUST to reference scaffolds explicitly, or define the set of allowed consumer projections (which layers may be empty/absent) and how a projected layout reports conformance. Held at `discuss` because narrowing a long-standing MUST changes what every implementation's arch-allowlist test asserts; ckeletin-rust and ckeletin-go must agree on the projection model first."
+      "status": "done",
+      "decision": "update",
+      "rationale": "Proposed (to discuss): either scope the four-layer MUST to reference scaffolds explicitly, or define the set of allowed consumer projections (which layers may be empty/absent) and how a projected layout reports conformance. Held at `discuss` because narrowing a long-standing MUST changes what every implementation's arch-allowlist test asserts; ckeletin-rust and ckeletin-go must agree on the projection model first. RESOLVED 2026-06-25 (issue #31): both implementations voted to define allowed projections (not scope to scaffolds) — ckeletin-rust already ships the model in arch_allowlist.rs / ckeletin-project.toml [layers] (infrastructure = [] no-ops cleanly), ckeletin-go reports 40/40 with all four layers populated. Applied as a non-normative `notes:` clause on ARCH-001 documenting that a layer MAY be empty/absent and the report declares populated layers. Notes-level edit: spec_version stays 0.8.0, requirements.json byte-identical, both conformance reports remain green — no re-conform. A future normative mandate for projection *support* would be a separate version-bumping item."
     },
     {
       "id": "FB-004",
@@ -46,9 +46,9 @@
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-OUT-002",
       "summary": "OUT-002 says 'every command' MUST emit structured stdout in machine-readable mode but is silent on argument-parser/usage failures, which a CLI framework (clap, Cobra, Click) emits BEFORE a command resolves. ckeletin-rust documents clap usage errors as an exception that bypasses the JSON envelope; the spec should own that boundary rather than leave each implementation to decide. Refs: spec/04-output.yaml:40.",
-      "status": "discussing",
-      "decision": "discuss",
-      "rationale": "Proposed (to discuss): define the phase boundary explicitly — either parse errors MAY follow CLI-framework convention (machine-readable mode begins after argument parsing), or parse errors MUST be wrapped in the envelope too. Pick one and state it. Held at `discuss` because wrapping parser errors is a non-trivial implementation change (clap/Cobra emit before the handler runs); the implementations get a vote on feasibility before OUT-002 picks the stricter option."
+      "status": "done",
+      "decision": "update",
+      "rationale": "Proposed (to discuss): define the phase boundary explicitly — either parse errors MAY follow CLI-framework convention (machine-readable mode begins after argument parsing), or parse errors MUST be wrapped in the envelope too. Pick one and state it. Held at `discuss` because wrapping parser errors is a non-trivial implementation change (clap/Cobra emit before the handler runs); the implementations get a vote on feasibility before OUT-002 picks the stricter option. RESOLVED 2026-06-25 (issue #33): both implementations voted unanimously for the lenient option, each grounded in code — ckeletin-go (cmd/root.go sets no FlagErrorFunc; envelope only renders inside RunE) and ckeletin-rust (clap .get_matches() exits code 2 before any handler). Applied as a non-normative `notes:` clause on OUT-002: parser/usage errors emitted before command resolution MAY follow framework convention; from configuration load onward, output MUST be enveloped. Notes-level edit: spec_version stays 0.8.0, requirements.json byte-identical, both conformance reports remain green — no re-conform."
     },
     {
       "id": "FB-006",
@@ -74,9 +74,9 @@
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-ENF-004",
       "summary": "Terminology tension: the README frames conformance reports as 'retrospectives, not audits', while ENF-004 requires a living enforcement 'audit table'. Adversarially this reads as the spec distancing itself from audits while mandating one. Low severity / likely rhetorical. Refs: README.md:12, spec/02-enforcement.yaml:80.",
-      "status": "discussing",
-      "decision": "discuss",
-      "rationale": "Proposed (to discuss): clarify the README wording, e.g. 'not punitive audits; they are evidence retrospectives backed by an enforcement audit table', so 'audit' has one consistent meaning. Held at `discuss` only to batch it with the other wording decisions; trivial to apply once the framing is agreed."
+      "status": "done",
+      "decision": "update",
+      "rationale": "Proposed (to discuss): clarify the README wording, e.g. 'not punitive audits; they are evidence retrospectives backed by an enforcement audit table', so 'audit' has one consistent meaning. Held at `discuss` only to batch it with the other wording decisions; trivial to apply once the framing is agreed. RESOLVED 2026-06-25: README.md updated to 'evidence retrospectives, not punitive audits, even though each is backed by an enforcement audit table (CKSPEC-ENF-004)' — 'audit' now refers consistently to the ENF-004 audit table. Pure prose, no impl vote needed; no spec_version impact."
     }
   ]
 }
