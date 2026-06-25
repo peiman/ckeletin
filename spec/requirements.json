@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.8.0",
+  "spec_version": "0.9.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -234,7 +234,8 @@
       "level": "MUST",
       "checkable": true,
       "domain": "Enforcement",
-      "since": "v0.6.0"
+      "since": "v0.6.0",
+      "modified": "v0.9.0"
     },
     {
       "id": "CKSPEC-ENF-010",

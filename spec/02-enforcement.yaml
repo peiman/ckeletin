@@ -237,6 +237,7 @@ requirements:
     title: Conformance gate on release
     level: MUST
     since: v0.6.0
+    modified: v0.9.0
     checkable: true
     description: >
       An implementation MUST continuously verify its conformance
@@ -245,7 +246,15 @@ requirements:
       wired into an automated pipeline (for example a CI/CD release
       gate) so that drift from the latest spec blocks the release. The
       mechanism is the implementation's choice; the guarantee — no
-      release while non-conformant — is not.
+      release while non-conformant — is not. The gate MUST declare its
+      SUBJECT — what a green result proves: conformance of a named
+      implementation, or that the repository is a project derived by
+      scaffolding (CKSPEC-AGENT-007) that is not itself a ckeletin
+      implementation and so has nothing to verify. A no-op gate — one
+      that runs but checks nothing, e.g. a conformance step inherited by
+      a scaffolded project where the generator short-circuits — MUST NOT
+      count as ENF-009 satisfaction: it MUST announce that it verified
+      nothing, never pass silently as if it had proved conformance.
     rationale: >
       Automated Enforcement (Principle 9) requires that conformance be
       verified by the pipeline, not by someone remembering to run a
@@ -266,6 +275,23 @@ requirements:
       with a CKSPEC Conformance CI job that the release job depends on,
       plus a scheduled run that opens a drift issue. The spec mandates
       the gate, not the tool.
+
+      Subject declaration (FB-004): a green gate is only meaningful if
+      its subject is explicit. A ckeletin implementation's gate verifies
+      that implementation against the spec. A project derived by
+      scaffolding (CKSPEC-AGENT-007) inherits the release workflow but is
+      not necessarily a ckeletin implementation; there the conformance
+      step MUST either be absent or no-op-and-announce ("this repository
+      is a derived project, not a ckeletin implementation — nothing to
+      verify") so a green pipeline is never silently read as proven
+      conformance it did not check. This closes the gap where an
+      inherited gate hard-fails (blocking the consumer's own release) or
+      silently passes (proving nothing). ckeletin-rust realizes the
+      no-op-and-announce form: its conform recipes exit 0 with an
+      explanation when the upstream slug is absent from the manifest, and
+      the upstream-only conformance CI job is gated on repository
+      identity — so a derived project's release is neither blocked nor
+      falsely certified.
 
   - id: CKSPEC-ENF-010
     title: Published machine-readable conformance report
