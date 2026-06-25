@@ -25,7 +25,7 @@ requirements:
       specific locations (GitHub Releases, Notion, Confluence) —
       those may mirror the changelog but MUST NOT replace it.
     rationale: >
-      Single Source of Truth (Principle 9) demands one authoritative
+      Single Source of Truth (Principle 7) demands one authoritative
       location. Plain text in the repo survives platform migrations,
       forks, and the eventual death of any third-party service.
       Truth-Seeking (Principle 1) requires that the record be
@@ -43,7 +43,7 @@ requirements:
       in reverse chronological order (newest first). Each version
       heading MUST include the version number and release date.
     rationale: >
-      Lean Iteration (Principle 3) favors the simplest standard
+      Lean Iteration (Principle 4) favors the simplest standard
       that works — Keep a Changelog is the most widely adopted
       convention in open source. The six categories cover all
       change types and let readers scan for what matters to them.
@@ -77,7 +77,7 @@ requirements:
       new functionality, PATCH for backward-compatible fixes. The
       changelog MUST state that the project follows SemVer.
     rationale: >
-      Platforms, Not Features (Principle 4) requires that version
+      Platforms, Not Features (Principle 5) requires that version
       numbers carry predictable meaning. SemVer combined with a
       changelog gives users everything needed for safe upgrade
       decisions — the version signals risk level, the changelog
@@ -95,7 +95,7 @@ requirements:
       date, and a fresh empty Unreleased section is created above
       it.
     rationale: >
-      Lean Iteration (Principle 3) — the Unreleased section makes
+      Lean Iteration (Principle 4) — the Unreleased section makes
       upcoming changes visible without requiring a release. It
       avoids the chaos of contributors not knowing which version
       number to assign to ongoing work.
@@ -129,7 +129,7 @@ requirements:
       platform. This makes the changelog self-navigating — readers
       can click any version to see every line that changed.
     rationale: >
-      Platforms, Not Features (Principle 4) — comparison links
+      Platforms, Not Features (Principle 5) — comparison links
       make the changelog a durable navigation tool. If the hosting
       platform changes, update the URLs once; the changelog
       structure remains intact.

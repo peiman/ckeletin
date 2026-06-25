@@ -14,6 +14,8 @@ from scripts.validate_spec import (
     validate_conformance_entry,
     validate_conformance_coverage,
     collect_conformance_warnings,
+    load_principles,
+    validate_principle_citations,
     collect_all_requirements,
     generate_requirements_data,
     validate_requirements_json_sync,
@@ -480,6 +482,90 @@ class TestSchemaIsSingleSourceOfTruth:
 
     def test_enforcement_levels_derive_from_schema(self):
         assert VALID_ENFORCEMENT_LEVELS == enum_values("enforcement_level")
+
+
+class TestPrincipleCitations:
+    """Every '<Name> (Principle N)' in spec prose must agree with principles.md.
+    principles.md is the SSOT for the name<->number mapping (Principle 7); this
+    validator makes that agreement enforced rather than assumed (Principle 9)."""
+
+    PRINCIPLES_MD = (
+        "# Ckeletin Principles\n\n"
+        "### 1. Truth-Seeking\nx\n\n"
+        "### 2. Curiosity Over Certainty\nx\n\n"
+        "### 4. Lean Iteration\nx\n\n"
+        "### 9. Automated Enforcement\nx\n\n"
+    )
+
+    def _write(self, tmp_path, principles, spec_body):
+        principles_path = tmp_path / "principles.md"
+        principles_path.write_text(principles)
+        spec_dir = tmp_path / "spec"
+        spec_dir.mkdir()
+        (spec_dir / "01-x.yaml").write_text(spec_body)
+        return str(spec_dir), str(principles_path)
+
+    def test_load_principles_parses_numbers_and_names(self, tmp_path):
+        path = tmp_path / "principles.md"
+        path.write_text(self.PRINCIPLES_MD)
+        by_number = load_principles(str(path))
+        assert by_number[1] == "Truth-Seeking"
+        assert by_number[4] == "Lean Iteration"
+        assert by_number[9] == "Automated Enforcement"
+
+    def test_stale_number_detected(self, tmp_path):
+        # "Automated Enforcement" is Principle 9; citing it as 2 must error.
+        spec_dir, principles = self._write(
+            tmp_path,
+            self.PRINCIPLES_MD,
+            "domain:\n  name: x\nrequirements:\n"
+            "  - id: CKSPEC-X-001\n"
+            "    rationale: Automated Enforcement (Principle 2) demands it.\n",
+        )
+        errors = validate_principle_citations(spec_dir, principles)
+        assert any("Automated Enforcement" in e and "(Principle 2)" in e for e in errors), errors
+
+    def test_correct_citation_passes(self, tmp_path):
+        spec_dir, principles = self._write(
+            tmp_path,
+            self.PRINCIPLES_MD,
+            "domain:\n  name: x\nrequirements:\n"
+            "  - id: CKSPEC-X-001\n"
+            "    rationale: Automated Enforcement (Principle 9) demands it.\n",
+        )
+        assert validate_principle_citations(spec_dir, principles) == []
+
+    def test_folded_multiline_name_resolves(self, tmp_path):
+        # YAML folds the wrapped name to one line; the validator must see it whole.
+        principles = self.PRINCIPLES_MD + "### 5. Platforms, Not Features\nx\n\n"
+        spec_dir, principles_path = self._write(
+            tmp_path,
+            principles,
+            "domain:\n  name: x\nrequirements:\n"
+            "  - id: CKSPEC-X-001\n"
+            "    rationale: >\n"
+            "      Platforms,\n"
+            "      Not Features (Principle 5) builds the next step.\n",
+        )
+        assert validate_principle_citations(spec_dir, principles_path) == []
+
+    def test_unknown_principle_name_detected(self, tmp_path):
+        # A name principles.md no longer defines must not pass silently.
+        spec_dir, principles = self._write(
+            tmp_path,
+            self.PRINCIPLES_MD,
+            "domain:\n  name: x\nrequirements:\n"
+            "  - id: CKSPEC-X-001\n"
+            "    rationale: Framework Independence (Principle 9) demands it.\n",
+        )
+        errors = validate_principle_citations(spec_dir, principles)
+        assert errors, "an unrecognised principle name should be flagged"
+
+    def test_real_spec_citations_match_principles(self, spec_dir):
+        """Regression guard: the shipped spec must carry zero citation drift."""
+        principles_path = os.path.join(os.path.dirname(spec_dir), "principles.md")
+        errors = validate_principle_citations(spec_dir, principles_path)
+        assert errors == [], "stale principle citations in spec:\n" + "\n".join(errors)
 
     def test_required_requirement_fields_derive_from_schema(self):
         assert REQUIRED_REQUIREMENT_FIELDS == required_fields("requirement")
