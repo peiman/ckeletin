@@ -2,6 +2,7 @@
   "items": [
     {
       "id": "FB-001",
+      "issue": 16,
       "reporter": "spec-self-review",
       "spec_rule": "CKSPEC-ENF-002",
       "summary": "The `design` enforcement_level is overloaded: in ckeletin-rust's report it labels both structurally-strong enforcement (CKSPEC-ARCH-007 — a stray root .rs file belongs to no crate and is not built, effectively compile-time) and near-attestation (CKSPEC-CL-004, ENF-003, ENF-004 — 'documented in the CONFORMANCE.md audit table'). One label thus spans the strongest and weakest ends of the ladder and no longer communicates enforcement strength. Surfaced when enforcement_level validation was first added (it was previously unvalidated, so `design`/`test` shipped unchecked). Independently re-confirmed 2026-06-25 by the a0 dogfooding review (its finding #4): the ENF-002 ladder (compile-time, linter, SAST, script, CI, honor-system) and the schema's added `test`/`design` levels disagree, and `design` admittedly spans compile-time-strong to honor-system-weak.",
@@ -11,6 +12,7 @@
     },
     {
       "id": "FB-002",
+      "issue": 30,
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-AGENT-001",
       "summary": "The spec defines language implementations and 'CLI application scaffolds' but never defines the consumer/export boundary: which artifacts are reference-implementation truth versus derived-project truth. Exposed scaffolding a0 from ckeletin-rust — the clone dragged ckeletin-rust's OWN root-level conformance/prose artifacts (CONFORMANCE.md, conformance-mapping.toml, conformance-report.json, conformance/requirements.json, spec-feedback/planning docs) into the consumer, where they read as authoritative about a0 even though `just conform` is upstream-only there. NB: this is the scaffold/init export path, NOT `just ckeletin-update` (which only propagates `.ckeletin/`). A concrete sub-instance: a framework-owned recipe (`.ckeletin/Justfile` ckeletin-fuzz) hardcodes a consumer-owned filename (`--test fuzz_ping`), so a consumer that replaces `ping` carries a stale target. Cuts against P7 (SSOT) and P9 (Automated Enforcement). Refs: README.md:8, README.md:104, spec/05-agent-readiness.yaml:20, spec/02-enforcement.yaml:242.",
@@ -20,6 +22,7 @@
     },
     {
       "id": "FB-003",
+      "issue": 31,
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-ARCH-001",
       "summary": "ARCH-001 mandates four layers (Entry, Command, Business Logic, Infrastructure) and ARCH-002/004/005 assume that shape, but real consumers need honest deviations the spec has not caught up to — e.g. ckeletin-rust already learned a consumer may legitimately declare infrastructure = [] (no shared-services layer). Written as universal, the four-layer rule forces consumers either to fake a layer or to look non-conformant when they are honestly simpler/different. Refs: spec/01-architecture.yaml:19, spec/01-architecture.yaml:40, spec/01-architecture.yaml:82.",
@@ -29,6 +32,7 @@
     },
     {
       "id": "FB-004",
+      "issue": 32,
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-ENF-009",
       "summary": "ENF-009 requires releases to verify conformance against the latest spec but does not distinguish 'implementation conformance' from 'consumer scaffold health'. A derived repo that inherits a release workflow where `just conform` no-ops can look ENF-009-compliant while proving nothing — a green no-op satisfying the gate by accident. Refs: spec/02-enforcement.yaml:242.",
@@ -38,6 +42,7 @@
     },
     {
       "id": "FB-005",
+      "issue": 33,
       "reporter": "a0-dogfooding",
       "spec_rule": "CKSPEC-OUT-002",
       "summary": "OUT-002 says 'every command' MUST emit structured stdout in machine-readable mode but is silent on argument-parser/usage failures, which a CLI framework (clap, Cobra, Click) emits BEFORE a command resolves. ckeletin-rust documents clap usage errors as an exception that bypasses the JSON envelope; the spec should own that boundary rather than leave each implementation to decide. Refs: spec/04-output.yaml:40.",
@@ -56,6 +61,7 @@
     },
     {
       "id": "FB-007",
+      "issue": 34,
       "reporter": "a0-dogfooding",
       "spec_rule": "spec/_schema.yaml (checkable field)",
       "summary": "Several `checkable: true` requirements (e.g. AGENT-001/004, CL-002/006, ENF-003/004) carry semantic-sufficiency claims that grep/file-existence cannot fully verify; the reports honestly fall back to honor-system/design evidence, but the boolean `checkable` overstates what is machine-verifiable. Refs: spec/_schema.yaml:58, spec/05-agent-readiness.yaml:69, spec/06-changelog.yaml:40.",
