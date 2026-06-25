@@ -1,3 +1,13 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "FB-001",
+      "reporter": "spec-self-review",
+      "spec_rule": "CKSPEC-ENF-002",
+      "summary": "The `design` enforcement_level is overloaded: in ckeletin-rust's report it labels both structurally-strong enforcement (CKSPEC-ARCH-007 — a stray root .rs file belongs to no crate and is not built, effectively compile-time) and near-attestation (CKSPEC-CL-004, ENF-003, ENF-004 — 'documented in the CONFORMANCE.md audit table'). One label thus spans the strongest and weakest ends of the ladder and no longer communicates enforcement strength. Surfaced when enforcement_level validation was first added (it was previously unvalidated, so `design`/`test` shipped unchecked).",
+      "status": "discussing",
+      "decision": "discuss",
+      "rationale": "Proposed resolution to discuss with the consumer: introduce a distinct `structural` level for the un-buildable cases and route documentation/attestation cases to `honor-system`, then have ckeletin-rust reclassify its 6 `design` entries. Held at `discuss` rather than `update` because the conformance/*.yaml aggregates are regenerated from ckeletin-rust's published data, so the implementation gets a vote before the enum changes; adding `structural` to the schema before any consumer uses it would be decorative vocabulary."
+    }
+  ]
 }

@@ -6,11 +6,18 @@ import re
 import sys
 import yaml
 
-REQUIRED_DOMAIN_FIELDS = {"name", "description"}
+try:  # `python scripts/validate_spec.py` puts scripts/ on sys.path; pytest puts repo root.
+    from scripts.schema import enum_values, load_schema, required_fields
+except ImportError:
+    from schema import enum_values, load_schema, required_fields
 
-REQUIRED_REQUIREMENT_FIELDS = {
-    "id", "title", "level", "since", "checkable", "description", "rationale"
-}
+# The schema is the single source of truth for enums and required-field sets.
+# These derive from spec/_schema.yaml so they cannot drift from it (Principle 7).
+_SCHEMA = load_schema()
+
+REQUIRED_DOMAIN_FIELDS = required_fields("domain", _SCHEMA)
+
+REQUIRED_REQUIREMENT_FIELDS = required_fields("requirement", _SCHEMA)
 
 
 def load_spec_file(path):
@@ -44,9 +51,11 @@ def validate_requirement_fields(req, filename):
 
 ID_PATTERN = re.compile(r"^CKSPEC-[A-Z]+-\d{3}$")
 
-VALID_LEVELS = {"MUST", "SHOULD", "MAY"}
+VALID_LEVELS = enum_values("level", _SCHEMA)
 
-VALID_STATUSES = {"met", "partial", "not-met", "not-applicable", "deferred"}
+VALID_STATUSES = enum_values("status", _SCHEMA)
+
+VALID_ENFORCEMENT_LEVELS = enum_values("enforcement_level", _SCHEMA)
 
 
 def validate_id_format(req_id):
@@ -195,9 +204,13 @@ def validate_level(level):
     return errors
 
 
-REQUIRED_CONFORMANCE_HEADER_FIELDS = {"implementation", "spec_version", "report_date"}
+# `requirements` is the per-requirement map (validated by iterating its entries),
+# not a scalar header field, so it is excluded from the header presence check.
+REQUIRED_CONFORMANCE_HEADER_FIELDS = required_fields("conformance_report", _SCHEMA) - {
+    "requirements"
+}
 
-REQUIRED_CONFORMANCE_ENTRY_FIELDS = {"status", "evidence"}
+REQUIRED_CONFORMANCE_ENTRY_FIELDS = required_fields("conformance_entry", _SCHEMA)
 
 
 def validate_conformance_header(data, filename):
@@ -219,6 +232,15 @@ def validate_conformance_entry(req_id, entry, filename):
         errors.append(
             f"{filename} {req_id}: invalid status '{entry['status']}'"
             f" (must be one of: {', '.join(sorted(VALID_STATUSES))})"
+        )
+    if (
+        "enforcement_level" in entry
+        and entry["enforcement_level"] not in VALID_ENFORCEMENT_LEVELS
+    ):
+        errors.append(
+            f"{filename} {req_id}: invalid enforcement_level "
+            f"'{entry['enforcement_level']}'"
+            f" (must be one of: {', '.join(sorted(VALID_ENFORCEMENT_LEVELS))})"
         )
     return errors
 

@@ -22,9 +22,12 @@ from scripts.validate_spec import (
     REQUIRED_DOMAIN_FIELDS,
     REQUIRED_REQUIREMENT_FIELDS,
     REQUIRED_CONFORMANCE_HEADER_FIELDS,
+    REQUIRED_CONFORMANCE_ENTRY_FIELDS,
     VALID_LEVELS,
     VALID_STATUSES,
+    VALID_ENFORCEMENT_LEVELS,
 )
+from scripts.schema import enum_values, required_fields
 
 
 class TestSpecFileStructure:
@@ -417,3 +420,79 @@ class TestRequirementsGeneration:
             errors = validate_requirements_json_sync(tmpdir)
             assert len(errors) == 1
             assert "out of sync" in errors[0]
+
+
+class TestEnforcementLevelValidation:
+    """The enforcement_level enum is now validated (it previously was not, so
+    'design' and 'test' shipped unchecked). Values are pulled from the schema,
+    so these tests use schema-derived values rather than hard-coding the enum."""
+
+    def test_valid_enforcement_level_accepted(self):
+        level = sorted(VALID_ENFORCEMENT_LEVELS)[0]
+        entry = {"status": "met", "evidence": "x", "enforcement_level": level}
+        assert validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml") == []
+
+    def test_invalid_enforcement_level_rejected(self):
+        entry = {"status": "met", "evidence": "x", "enforcement_level": "made-up"}
+        errors = validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml")
+        assert any(
+            "enforcement_level" in e and "made-up" in e for e in errors
+        ), f"expected an enforcement_level error, got: {errors}"
+
+    def test_omitted_enforcement_level_is_fine(self):
+        """enforcement_level is optional — absence is not an error."""
+        entry = {"status": "met", "evidence": "x"}
+        assert validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml") == []
+
+    def test_test_and_design_are_now_valid(self):
+        """The two levels the harvest legitimised must be accepted."""
+        for level in ("test", "design"):
+            entry = {"status": "met", "evidence": "x", "enforcement_level": level}
+            assert validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml") == [], (
+                f"{level} should be a valid enforcement_level"
+            )
+
+    def test_real_conformance_enforcement_levels_all_valid(self, conformance_dir):
+        """Regression guard for the 7 entries (design×6, test×1) that previously
+        shipped unvalidated: every enforcement_level in the real reports is now
+        in the schema enum."""
+        for fname in os.listdir(conformance_dir):
+            if not fname.endswith(".yaml"):
+                continue
+            data = load_spec_file(os.path.join(conformance_dir, fname))
+            for req_id, entry in data.get("requirements", {}).items():
+                if isinstance(entry, dict) and "enforcement_level" in entry:
+                    errors = validate_conformance_entry(req_id, entry, fname)
+                    assert errors == [], f"{fname} {req_id}: {errors}"
+
+
+class TestSchemaIsSingleSourceOfTruth:
+    """Guard that validate_spec's enums and required-field sets are DERIVED from
+    spec/_schema.yaml, not re-hardcoded. If a future change reintroduces a literal
+    that drifts from the schema, these fail — enforcing that the SSOT stays single
+    (Principle 7 — SSOT, Principle 9 — enforce it, don't just assert it)."""
+
+    def test_levels_derive_from_schema(self):
+        assert VALID_LEVELS == enum_values("level")
+
+    def test_statuses_derive_from_schema(self):
+        assert VALID_STATUSES == enum_values("status")
+
+    def test_enforcement_levels_derive_from_schema(self):
+        assert VALID_ENFORCEMENT_LEVELS == enum_values("enforcement_level")
+
+    def test_required_requirement_fields_derive_from_schema(self):
+        assert REQUIRED_REQUIREMENT_FIELDS == required_fields("requirement")
+
+    def test_required_domain_fields_derive_from_schema(self):
+        assert REQUIRED_DOMAIN_FIELDS == required_fields("domain")
+
+    def test_required_conformance_entry_fields_derive_from_schema(self):
+        assert REQUIRED_CONFORMANCE_ENTRY_FIELDS == required_fields("conformance_entry")
+
+    def test_required_conformance_header_excludes_the_requirements_map(self):
+        """Header check covers the scalar report metadata, not the requirements
+        map (which is validated by iterating its entries)."""
+        assert REQUIRED_CONFORMANCE_HEADER_FIELDS == (
+            required_fields("conformance_report") - {"requirements"}
+        )
