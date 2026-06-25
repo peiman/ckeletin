@@ -11,7 +11,8 @@ requirement.
 
 This is not a top-down mandate. The specification and its
 implementations learn from each other — conformance reports are
-retrospectives, not audits.
+evidence retrospectives, not punitive audits, even though each is
+backed by an enforcement audit table (CKSPEC-ENF-004).
 
 ## Current State
 
@@ -20,10 +21,10 @@ Six domains, verified against the reference implementations:
 | # | Domain | Requirements | Platform it creates |
 |---|--------|-------------|---------------------|
 | 01 | Architecture | CKSPEC-ARCH-001 to 007 | Code organization, layer boundaries |
-| 02 | Enforcement | CKSPEC-ENF-001 to 004 | Every rule is automated |
+| 02 | Enforcement | CKSPEC-ENF-001 to 010 | Every rule is automated |
 | 03 | Testing | CKSPEC-TEST-001 to 004 | Correctness is verified |
-| 04 | Output | CKSPEC-OUT-001 to 005 | Machines can parse responses |
-| 05 | Agent Readiness | CKSPEC-AGENT-001 to 005 | Any agent can use the project |
+| 04 | Output | CKSPEC-OUT-001 to 006 | Machines can parse responses |
+| 05 | Agent Readiness | CKSPEC-AGENT-001 to 006 | Any agent can use the project |
 | 06 | Changelog | CKSPEC-CL-001 to 007 | Changes are communicated |
 
 Each domain is a platform for the ones after it. The order matters.

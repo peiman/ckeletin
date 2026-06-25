@@ -26,7 +26,7 @@ requirements:
       Truth-Seeking (Principle 1) requires that every behavior claim
       be backed by evidence — a failing test is the first piece of
       evidence that the requirement is real and the assertion is
-      correct. Lean Iteration (Principle 3) favors writing the
+      correct. Lean Iteration (Principle 4) favors writing the
       smallest test that proves the next behavior increment, keeping
       the feedback loop tight.
 
@@ -43,7 +43,7 @@ requirements:
       exclusions (e.g., TUI code requiring interactive testing, demo
       code) MUST be documented and justified.
     rationale: >
-      Automated Enforcement (Principle 2) requires that coverage
+      Automated Enforcement (Principle 9) requires that coverage
       thresholds be machine-checked, not manually reviewed. A
       threshold prevents silent erosion of test quality over time.
       Documenting exclusions satisfies Truth-Seeking (Principle 1) —
@@ -62,9 +62,9 @@ requirements:
       production code, making them naturally replaceable in tests
       without framework magic.
     rationale: >
-      Separation of Concerns (Principle 5) favors explicit dependency
+      Separation of Concerns (Principle 8) favors explicit dependency
       boundaries over implicit framework interception. Lean Iteration
-      (Principle 3) prefers simple test doubles that are easy to read,
+      (Principle 4) prefers simple test doubles that are easy to read,
       write, and maintain over generated mocks that add build
       complexity and obscure test intent. Interface-based injection
       makes the dependency graph visible, satisfying Truth-Seeking
@@ -85,7 +85,7 @@ requirements:
     rationale: >
       Truth-Seeking (Principle 1) demands that the commit history
       tells a truthful story — each commit represents a complete,
-      verified step. Lean Iteration (Principle 3) requires that every
+      verified step. Lean Iteration (Principle 4) requires that every
       increment is shippable. Atomic commits enable reliable git
       bisect, meaningful code review per commit, and preservation of
       the TDD narrative through normal merges.

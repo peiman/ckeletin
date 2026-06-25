@@ -25,11 +25,20 @@ requirements:
       for standalone reusable libraries that are independent of the CLI
       architecture.
     rationale: >
-      Separation of Concerns (Principle 5) requires that framework code,
+      Separation of Concerns (Principle 8) requires that framework code,
       business logic, and infrastructure live in different places. Each
       separation prevents a specific kind of drift. Platforms, Not Features
-      (Principle 4) demands that each layer is a stable platform for the
+      (Principle 5) demands that each layer is a stable platform for the
       layers above it.
+    notes: >
+      Layer projections (FB-003): a project organizes source into these four
+      layers, but a layer MAY be empty or absent when the project honestly has
+      no code for it — e.g. a CLI with no shared-services code declares an empty
+      Infrastructure layer rather than inventing one to look conformant. A
+      conformant report declares which layers are populated; an absent or empty
+      layer is a valid projection, not a violation. This documents existing
+      behavior — the reference implementations already treat an unpopulated
+      layer as conformant.
 
   - id: CKSPEC-ARCH-002
     title: Directed dependencies
@@ -45,11 +54,11 @@ requirements:
       depend on Command. Infrastructure and Public packages are available as
       common dependencies to all layers.
     rationale: >
-      Automated Enforcement (Principle 2) requires that dependency direction
-      be machine-verifiable. Separation of Concerns (Principle 5) is
+      Automated Enforcement (Principle 9) requires that dependency direction
+      be machine-verifiable. Separation of Concerns (Principle 8) is
       meaningless if layers can reach back into their callers. Directed
-      dependencies ensure that inner layers remain stable platforms
-      (Principle 4) for the layers above them.
+      dependencies ensure that inner layers remain stable platforms for
+      the layers above them — Platforms, Not Features (Principle 5).
 
   - id: CKSPEC-ARCH-003
     title: CLI framework isolation
@@ -62,10 +71,10 @@ requirements:
       layers MUST NOT import the CLI framework. The Entry layer MAY import
       the Command layer but MUST NOT import the CLI framework directly.
     rationale: >
-      Framework Independence (Principle 6) demands that business logic does
+      Separation of Concerns (Principle 8) demands that business logic does
       not depend on CLI frameworks. This ensures testability, portability,
       and the ability to swap the CLI framework without rewriting business
-      logic. Automated Enforcement (Principle 2) requires that this
+      logic. Automated Enforcement (Principle 9) requires that this
       isolation be checkable by static analysis tools.
     notes: >
       Configuration libraries (e.g., Viper, figment) are infrastructure
@@ -84,11 +93,12 @@ requirements:
       services) and the language's standard library. Shared logic between
       Business Logic packages MUST be extracted to the Infrastructure layer.
     rationale: >
-      Separation of Concerns (Principle 5) prevents coupling between
+      Separation of Concerns (Principle 8) prevents coupling between
       features. When business logic packages import each other, changes
       cascade unpredictably. Extracting shared logic to Infrastructure
-      creates a stable platform (Principle 4) that multiple features can
-      depend on without coupling to each other.
+      creates a stable platform that multiple features can depend on
+      without coupling to each other — Platforms, Not Features
+      (Principle 5).
     notes: >
       Serialization annotations or derive macros from the language's
       standard or idiomatic serialization framework (e.g., Go's
@@ -110,10 +120,10 @@ requirements:
       consume. Infrastructure MAY depend on external libraries appropriate
       to its purpose (e.g., configuration libraries).
     rationale: >
-      Platforms, Not Features (Principle 4) requires that Infrastructure
+      Platforms, Not Features (Principle 5) requires that Infrastructure
       be a stable foundation. If it depends on upper layers, changes to
       commands or business logic destabilize shared services. Separation of
-      Concerns (Principle 5) requires that foundation code and feature code
+      Concerns (Principle 8) requires that foundation code and feature code
       live in different dependency directions.
 
   - id: CKSPEC-ARCH-006
@@ -128,8 +138,8 @@ requirements:
       entry point SHOULD be small enough that excluding it from unit test
       coverage is a reasonable decision.
     rationale: >
-      Separation of Concerns (Principle 5) demands that the entry point
-      does one thing: bootstrap. Lean Iteration (Principle 3) favors
+      Separation of Concerns (Principle 8) demands that the entry point
+      does one thing: bootstrap. Lean Iteration (Principle 4) favors
       minimal code at the boundary where testing is most expensive (process
       entry). All testable logic belongs in layers that can be exercised
       without launching the full program.
@@ -145,11 +155,11 @@ requirements:
       appropriate layer directories. If a Public package layer exists, its
       packages MUST NOT import from private implementation packages.
     rationale: >
-      Automated Enforcement (Principle 2) requires that file placement
+      Automated Enforcement (Principle 9) requires that file placement
       rules be machine-checkable. Truth-Seeking (Principle 1) demands
       that the directory tree honestly reflects the architecture -- a file
       outside its designated directory is a lie that erodes the layered
-      structure. Separation of Concerns (Principle 5) extends to the
+      structure. Separation of Concerns (Principle 8) extends to the
       filesystem: each directory has a clear purpose.
     notes: >
       Language-specific implementations define their own designated

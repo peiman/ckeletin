@@ -59,6 +59,14 @@ requirements:
       `--output text|json` independently (Feedback Cycle, Principle 10);
       ckeletin-rust started with a boolean `--json` and switched to match.
 
+      Parser/usage-error boundary (FB-005): machine-readable mode applies to
+      command execution. Argument-parser and usage errors emitted by the CLI
+      framework *before* a command resolves (e.g. Cobra or clap exiting on an
+      unknown flag) MAY follow framework convention and need not be wrapped in
+      the structured envelope; from configuration load onward, output MUST
+      follow this requirement. Both reference implementations emit these
+      pre-resolution errors as framework-native text today.
+
   - id: CKSPEC-OUT-003
     title: Standardized output envelope
     level: SHOULD

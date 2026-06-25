@@ -6,11 +6,18 @@ import re
 import sys
 import yaml
 
-REQUIRED_DOMAIN_FIELDS = {"name", "description"}
+try:  # `python scripts/validate_spec.py` puts scripts/ on sys.path; pytest puts repo root.
+    from scripts.schema import enum_values, load_schema, required_fields
+except ImportError:
+    from schema import enum_values, load_schema, required_fields
 
-REQUIRED_REQUIREMENT_FIELDS = {
-    "id", "title", "level", "since", "checkable", "description", "rationale"
-}
+# The schema is the single source of truth for enums and required-field sets.
+# These derive from spec/_schema.yaml so they cannot drift from it (Principle 7).
+_SCHEMA = load_schema()
+
+REQUIRED_DOMAIN_FIELDS = required_fields("domain", _SCHEMA)
+
+REQUIRED_REQUIREMENT_FIELDS = required_fields("requirement", _SCHEMA)
 
 
 def load_spec_file(path):
@@ -44,9 +51,11 @@ def validate_requirement_fields(req, filename):
 
 ID_PATTERN = re.compile(r"^CKSPEC-[A-Z]+-\d{3}$")
 
-VALID_LEVELS = {"MUST", "SHOULD", "MAY"}
+VALID_LEVELS = enum_values("level", _SCHEMA)
 
-VALID_STATUSES = {"met", "partial", "not-met", "not-applicable", "deferred"}
+VALID_STATUSES = enum_values("status", _SCHEMA)
+
+VALID_ENFORCEMENT_LEVELS = enum_values("enforcement_level", _SCHEMA)
 
 
 def validate_id_format(req_id):
@@ -195,9 +204,13 @@ def validate_level(level):
     return errors
 
 
-REQUIRED_CONFORMANCE_HEADER_FIELDS = {"implementation", "spec_version", "report_date"}
+# `requirements` is the per-requirement map (validated by iterating its entries),
+# not a scalar header field, so it is excluded from the header presence check.
+REQUIRED_CONFORMANCE_HEADER_FIELDS = required_fields("conformance_report", _SCHEMA) - {
+    "requirements"
+}
 
-REQUIRED_CONFORMANCE_ENTRY_FIELDS = {"status", "evidence"}
+REQUIRED_CONFORMANCE_ENTRY_FIELDS = required_fields("conformance_entry", _SCHEMA)
 
 
 def validate_conformance_header(data, filename):
@@ -220,6 +233,15 @@ def validate_conformance_entry(req_id, entry, filename):
             f"{filename} {req_id}: invalid status '{entry['status']}'"
             f" (must be one of: {', '.join(sorted(VALID_STATUSES))})"
         )
+    if (
+        "enforcement_level" in entry
+        and entry["enforcement_level"] not in VALID_ENFORCEMENT_LEVELS
+    ):
+        errors.append(
+            f"{filename} {req_id}: invalid enforcement_level "
+            f"'{entry['enforcement_level']}'"
+            f" (must be one of: {', '.join(sorted(VALID_ENFORCEMENT_LEVELS))})"
+        )
     return errors
 
 
@@ -232,6 +254,81 @@ def validate_conformance_coverage(spec_ids, conformance_ids, filename):
         errors.append(f"{filename}: spec ID '{mid}' has no conformance entry")
     for oid in sorted(orphaned_in_conformance):
         errors.append(f"{filename}: conformance ID '{oid}' has no matching spec requirement")
+    return errors
+
+
+# A principle citation in spec prose: "<Name> (Principle N)". principles.md is
+# the single source of truth for the name<->number mapping (Principle 7 — SSOT);
+# a hand-typed number in a rationale will drift the moment principles are
+# renumbered, and nothing caught it before this validator (Principle 9).
+PRINCIPLE_HEADING_RE = re.compile(r"^###\s+(\d+)\.\s+(.+?)\s*$", re.M)
+CITATION_RE = re.compile(r"\(Principle\s+(\d+)\)")
+
+
+def load_principles(principles_path):
+    """Parse principles.md headings into a {number: name} mapping."""
+    with open(principles_path, "r") as f:
+        text = f.read()
+    return {
+        int(m.group(1)): m.group(2).strip()
+        for m in PRINCIPLE_HEADING_RE.finditer(text)
+    }
+
+
+def _iter_strings(node):
+    """Yield every string value reachable in a parsed-YAML structure."""
+    if isinstance(node, str):
+        yield node
+    elif isinstance(node, dict):
+        for value in node.values():
+            yield from _iter_strings(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _iter_strings(value)
+
+
+def validate_principle_citations(spec_dir, principles_path):
+    """Check every '<Name> (Principle N)' citation against principles.md.
+
+    The name immediately preceding the citation must be the canonical name
+    that principles.md assigns to number N. Catches both stale numbers
+    (a renumber the rationale missed) and stale names (a principle that was
+    renamed or removed). Returns a list of error strings.
+    """
+    errors = []
+    by_number = load_principles(principles_path)
+    by_name = {name: num for num, name in by_number.items()}
+    # Longest name first so "Single Source of Truth" wins over any shorter suffix.
+    names_by_len = sorted(by_name, key=len, reverse=True)
+
+    for fname in sorted(os.listdir(spec_dir)):
+        if not fname.endswith(".yaml") or fname.startswith("_"):
+            continue
+        data = load_spec_file(os.path.join(spec_dir, fname))
+        if data is None:
+            continue
+        for text in _iter_strings(data):
+            for match in CITATION_RE.finditer(text):
+                num = int(match.group(1))
+                cite = match.group(0)
+                before = text[: match.start()].rstrip()
+                matched = next(
+                    (name for name in names_by_len if before.endswith(name)), None
+                )
+                if num not in by_number:
+                    errors.append(
+                        f"{fname}: '{cite}' references a non-existent principle number"
+                    )
+                elif matched is None:
+                    errors.append(
+                        f"{fname}: {cite} is not preceded by a known principle name "
+                        f"(principles.md calls Principle {num} '{by_number[num]}')"
+                    )
+                elif by_name[matched] != num:
+                    errors.append(
+                        f"{fname}: '{matched} {cite}' is stale — principles.md lists "
+                        f"'{matched}' as Principle {by_name[matched]}"
+                    )
     return errors
 
 
@@ -296,6 +393,17 @@ def validate_all(spec_dir, conformance_dir):
     all_errors.extend(validate_id_uniqueness(all_ids))
 
     all_errors.extend(validate_requirements_json_sync(spec_dir))
+
+    principles_path = os.path.join(
+        os.path.dirname(os.path.abspath(spec_dir)), "principles.md"
+    )
+    if os.path.exists(principles_path):
+        all_errors.extend(validate_principle_citations(spec_dir, principles_path))
+    else:
+        all_errors.append(
+            f"principles.md not found at {principles_path}"
+            " — cannot validate principle citations"
+        )
 
     spec_id_set = {sid for sid, _ in all_ids}
 

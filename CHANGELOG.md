@@ -28,6 +28,9 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ### Changed
 
+- CKSPEC-OUT-002: added notes defining the parser/usage-error boundary (FB-005, issue #33) — argument-parser errors emitted before command resolution MAY follow CLI-framework convention; enveloping is required from configuration load onward. Both reference implementations voted lenient; notes-level clarification, no spec_version bump
+- CKSPEC-ARCH-001: added notes permitting honest layer projections (FB-003, issue #31) — a layer MAY be empty/absent and the conformance report declares which layers are populated. Documents existing implementation behavior; notes-level clarification, no spec_version bump
+- README: conformance reports reworded to "evidence retrospectives, not punitive audits, … backed by an enforcement audit table (CKSPEC-ENF-004)" (FB-008) — "audit" now refers consistently to the ENF-004 table
 - CKSPEC-ENF-006: accepts violation_evidence as alternative to violation_test for structural and tooling-enforced enforcement; narrowed from four categories to two after ckeletin-go proved self-referential case was testable
 - CKSPEC-ARCH-004: added notes clarifying serialization annotations are permitted on business logic types
 - CKSPEC-ENF-002: added notes on language-varying enforcement levels
