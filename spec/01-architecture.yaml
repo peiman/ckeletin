@@ -108,6 +108,19 @@ requirements:
       enable the Infrastructure output layer to render domain types
       without the domain importing Infrastructure.
 
+      Enforcement granularity (#20): "Business Logic packages MUST NOT import
+      each other" is compile-time enforceable only at the boundary the
+      language gives a build-graph edge. Where each Business Logic unit is a
+      separate package/crate/module that the compiler tracks (Go packages, a
+      multi-crate Rust split), the rule is structural. Where Business Logic
+      lives as modules inside a single compilation unit (e.g. a single Rust
+      `domain` crate), the language cannot cheaply enforce intra-unit module
+      boundaries, so that slice is design-level, not compile-time — the
+      honest enforcement_level a report must use. The multi-crate split is the
+      documented upgrade path when the business-logic layer grows. The
+      cross-layer boundary (Business Logic cannot import Command/Infrastructure
+      callers) remains compile-time enforced regardless.
+
   - id: CKSPEC-ARCH-005
     title: Infrastructure independence
     level: MUST
