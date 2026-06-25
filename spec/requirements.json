@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.8.0",
+  "spec_version": "0.9.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -267,7 +267,8 @@
       "level": "SHOULD",
       "checkable": true,
       "domain": "Output",
-      "since": "v0.2.0"
+      "since": "v0.2.0",
+      "modified": "v0.9.0"
     },
     {
       "id": "CKSPEC-OUT-004",
