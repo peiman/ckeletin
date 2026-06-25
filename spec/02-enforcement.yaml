@@ -35,14 +35,22 @@ requirements:
     title: Enforcement ladder
     level: SHOULD
     since: v0.1.0
-    modified: v0.3.0
+    modified: v0.10.0
     checkable: false
     description: >
-      Enforcement SHOULD use the strongest feasible mechanism. In
-      order of preference: (1) compile-time / type system,
-      (2) linter, (3) static analysis / SAST, (4) validator script,
-      (5) CI-only check, (6) honor system (last resort). Higher
-      levels catch violations earlier and cost less to maintain.
+      Enforcement SHOULD use the strongest feasible mechanism. From
+      strongest to weakest: (1) compile-time — a violation fails to
+      build (type system); (2) structural — a violation cannot build
+      or is not built because of the project's structure (a dependency
+      edge absent from the manifest, a source file outside any
+      compilation unit); as strong as compile-time, achieved by the
+      build graph / layout rather than a type error; (3) linter;
+      (4) static analysis / SAST; (5) validator script; (6) automated
+      test — a dedicated test asserts the property and gates CI;
+      (7) CI-only check; (8) honor system (last resort). Higher levels
+      catch violations earlier and cost less to maintain. This list is
+      the enforcement_level vocabulary; the conformance schema enum and
+      this ladder are the same set (SSOT) and MUST NOT drift.
     rationale: >
       Automated Enforcement (Principle 9) prefers mechanisms that
       catch violations as early as possible. Compile-time enforcement
