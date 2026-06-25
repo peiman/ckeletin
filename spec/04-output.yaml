@@ -67,6 +67,15 @@ requirements:
       follow this requirement. Both reference implementations emit these
       pre-resolution errors as framework-native text today.
 
+      Activation precedence (#17): when the output mode is set in more than one
+      place, an explicit `--output` flag overrides configuration (file or env)
+      in both directions — flag > config > default — for successes and errors
+      alike. Resolution SHOULD come from one place — Single Source of Truth
+      (Principle 7) — rather than being recomputed per call site; ckeletin-rust
+      regressed here once (a config `json = true` silently overrode `--output
+      text`) and fixed it with a single resolver. Both reference
+      implementations resolve flag-over-config today.
+
   - id: CKSPEC-OUT-003
     title: Standardized output envelope
     level: SHOULD
