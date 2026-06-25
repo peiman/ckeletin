@@ -11,7 +11,8 @@ requirement.
 
 This is not a top-down mandate. The specification and its
 implementations learn from each other — conformance reports are
-retrospectives, not audits.
+evidence retrospectives, not punitive audits, even though each is
+backed by an enforcement audit table (CKSPEC-ENF-004).
 
 ## Current State
 
