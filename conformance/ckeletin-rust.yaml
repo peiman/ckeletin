@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.8.0
-report_date: '2026-06-05'
+spec_version: 0.9.0
+report_date: '2026-06-25'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -63,6 +63,21 @@ requirements:
       lists every subcommand (incl. catalog itself) with global flags carrying takes_value;
       framework unit tests in .ckeletin/crate/src/catalog.rs cover serialization. A regression
       fails them in CI (`just check`).
+  CKSPEC-AGENT-007:
+    status: met
+    evidence: 'init (.ckeletin/scripts/init.sh) strips upstream-only artifacts at scaffold
+      time — generated conformance evidence (CONFORMANCE.md, conformance-mapping.toml, conformance-report.json,
+      conformance/) and upstream-only prose (docs/, code-review-*, consumer-feedback-*, dogfooding-feedback-*)
+      — while keeping framework-owned .ckeletin/ and consumer-owned ckeletin-project.toml.
+      Framework-owned-but-upstream-only artifacts are kept INERT rather than stripped: the
+      conform recipes exit 0 with a subject announce when the upstream slug is absent from
+      Cargo.toml, and spec-drift.yml is gated on `github.repository == ''peiman/ckeletin-rust''`.'
+    enforcement_level: script
+    tests:
+    - cargo test -p ckeletin --test init_smoke -- --ignored
+    violation_evidence: .ckeletin/scripts/init.sh (the strip step) and .ckeletin/crate/tests/init_smoke.rs,
+      which asserts after init that the upstream-only artifacts are absent and .ckeletin/
+      + ckeletin-project.toml are retained; a regression fails the init-smoke CI job.
   CKSPEC-ARCH-001:
     status: met
     evidence: 'Cargo workspace members: crates/domain, crates/infrastructure, crates/cli,
@@ -83,7 +98,8 @@ requirements:
     - crates/domain/tests/violations/domain_imports_infrastructure.rs
   CKSPEC-ARCH-003:
     status: met
-    evidence: Only cli/Cargo.toml lists clap. Domain and infrastructure cannot import it.
+    evidence: Only crates/cli/Cargo.toml lists clap. Domain and infrastructure cannot import
+      it.
     enforcement_level: compile-time
     tests:
     - cargo check --workspace
@@ -109,11 +125,15 @@ requirements:
     - crates/infrastructure/tests/violations/infra_imports_domain.rs
   CKSPEC-ARCH-006:
     status: met
-    evidence: crates/cli/src/main.rs is bootstrap only — arg parsing, config, logging init,
-      dispatch.
-    enforcement_level: compile-time
+    evidence: crates/cli/src/main.rs is the bootstrap entry — arg parsing, config loading,
+      logging init, and dispatch. Feature logic lives in domain; the entry contains no business
+      logic.
+    enforcement_level: design
     violation_evidence: 'Structural: only crates/cli/Cargo.toml has [[bin]] target. Domain
-      and infrastructure crates are library-only.'
+      and infrastructure crates are library-only. Entry-point minimality is a structural/design
+      property — the compiler enforces that only cli has a bin target, but cannot enforce
+      that main.rs stays minimal (that''s a code-review / coverage judgment). Hence enforcement_level=design,
+      not compile-time.'
   CKSPEC-ARCH-007:
     status: met
     evidence: All source lives in designated crate directories; no source files at the workspace
@@ -212,23 +232,30 @@ requirements:
       Audit Table'' section.'
   CKSPEC-ENF-005:
     status: met
-    evidence: The conformance generator (.ckeletin/conform/src/main.rs, run by `just conform`)
-      loads the spec requirement IDs (live, with vendored conformance/requirements.json fallback)
-      and exits non-zero on any unmapped requirement before reporting.
+    evidence: 'The conformance generator (.ckeletin/conform/src/main.rs, run by `just conform`)
+      is hermetic by default: it reads ONLY the committed conformance/requirements.json snapshot
+      (no network, no file writes). `--refresh` (`just conform-refresh`) fetches the latest
+      spec from upstream and rewrites the snapshot for deliberate, reviewed reconciliation.
+      The generator exits non-zero on any unmapped requirement AND on any mapping entry whose
+      ID is not in the spec (stale/invented IDs inflate totals). Both directions are checked
+      before reporting.'
     enforcement_level: script
-    violation_evidence: Unit test find_unmapped_flags_a_requirement_missing_from_the_mapping
-      in .ckeletin/conform/src/main.rs proves the completeness check detects an unmapped requirement;
-      conform then exits non-zero (CI conform job).
+    violation_evidence: Unit tests find_unmapped_flags_a_requirement_missing_from_the_mapping
+      and find_extra_flags_a_mapping_entry_not_in_the_spec in .ckeletin/conform/src/main.rs
+      prove both completeness directions; conform exits non-zero (CI conform job).
   CKSPEC-ENF-006:
     status: met
     evidence: 7 trybuild violation tests back the compile-time claims. `just conform` verifies
       each declared violation_test file exists and emits an ENF-007 feedback signal for any
-      above-honor-system claim lacking a violation test or violation_evidence.
+      above-honor-system claim lacking a violation test or violation_evidence. Dangling anchor
+      validation also verifies that evidence file paths and symbol names cited in the mapping
+      actually exist.
     enforcement_level: script
     tests:
     - cargo test --workspace
-    violation_evidence: Unit tests lacks_proof_* in .ckeletin/conform/src/main.rs prove the
-      proof-detection logic flags above-honor-system claims lacking a violation test or evidence.
+    violation_evidence: Unit tests lacks_proof_* and dangling_anchor_* in .ckeletin/conform/src/main.rs
+      prove the proof-detection logic flags above-honor-system claims lacking a violation
+      test or evidence, and that dangling file anchors are caught.
   CKSPEC-ENF-007:
     status: met
     evidence: '`just conform` (.ckeletin/conform/src/main.rs) emits feedback signals for missing
@@ -251,14 +278,24 @@ requirements:
     status: met
     evidence: 'The tag-triggered release workflow (.github/workflows/release.yml) gates its
       publish step on the conform job (`needs: conform`), so no release proceeds while conformance
-      fails. A scheduled spec-drift job continuously checks the live spec_version against
-      the vendored one and opens an issue when upstream advances — the ''verify against latest''
-      half, since conform is deliberately hermetic (a documented divergence from ckeletin-go''s
-      live-fetch).'
+      fails. A tag-version reconciliation step asserts the pushed tag (vX.Y.Z) equals the
+      cli package CARGO_PKG_VERSION — preventing the historical incident where v0.2.0 was
+      cut from package version 0.1.0. A scheduled spec-drift job continuously checks the live
+      spec_version against the vendored one and opens an issue when upstream advances. The
+      gate declares its SUBJECT (ENF-009 v0.9.0): the conform recipes (.ckeletin/Justfile)
+      exit 0 with a subject announce when the upstream slug `peiman/ckeletin-rust` is absent
+      from Cargo.toml (a derived project), and the upstream-only spec-drift CI job is gated
+      on `github.repository == ''peiman/ckeletin-rust''` — so an inherited gate in a consumer
+      declares it verified nothing rather than blocking that project''s release or passing
+      silently as proven conformance.'
     enforcement_level: ci
-    violation_evidence: .github/workflows/release.yml gates release on the conform job; .github/workflows/ci.yml
+    violation_evidence: '.github/workflows/release.yml gates release on the conform job; the
+      tag-version step fails the release when the tag and package version disagree; .github/workflows/ci.yml
       runs `just conform`; the spec-drift detector job surfaces upstream advances so drift
-      is caught between releases.
+      is caught between releases. Subject declaration: the conform recipes in .ckeletin/Justfile
+      short-circuit (exit 0 + announce) on absence of the upstream slug, and spec-drift.yml
+      is `github.repository`-gated — proven by the conform_guard integration test that a derived
+      project''s `just conform` no-ops and declares its subject.'
   CKSPEC-ENF-010:
     status: met
     evidence: A deterministic conformance-report.json (sorted keys, no timestamp) is published
@@ -292,13 +329,16 @@ requirements:
       check`).
   CKSPEC-OUT-003:
     status: met
-    evidence: 'Envelope struct: status, command, data, error. Unit tests verify serialization.'
+    evidence: 'Envelope struct emits all four keys (status, command, data, error) as a TOTAL
+      schema (OUT-003 v0.9.0): no skip_serializing_if, so an absent value (data on error,
+      error on success) serializes as JSON null, never omitted. Unit tests assert present-and-null
+      — `data` is present and null on error, `error` is present and null on success.'
     enforcement_level: script
     tests:
     - cargo test -p ckeletin --lib output
     violation_evidence: .ckeletin/crate/src/output.rs envelope_* unit tests assert the {status,
-      command, data, error} envelope shape and serialization; a regression fails them in CI
-      (`just check`).
+      command, data, error} total envelope shape (every key present; absent value is JSON
+      null, not omitted); a regression fails them in CI (`just check`).
   CKSPEC-OUT-004:
     status: met
     evidence: Output::success/message/error shadow-log the rendered data (not just the command
@@ -309,16 +349,27 @@ requirements:
     tests:
     - cargo test -p ckeletin --lib output
     violation_evidence: Shadow-log unit tests success_shadow_logs_the_rendered_data + message_shadow_logs_the_message_text
-      in .ckeletin/crate/src/output.rs; default-on/opt-out integration tests audit_log_written_by_default
-      + no_audit_flag_disables_the_log_file in crates/cli/tests/cli.rs
+      in .ckeletin/crate/src/output.rs; default-on/opt-out integration tests audit_log_written_under_config_home_by_default
+      + no_audit_flag_disables_the_log_file in crates/cli/tests/cli.rs; content test audit_log_content_contains_output_success_event_and_data
+      in crates/cli/tests/cli.rs
   CKSPEC-OUT-005:
     status: met
-    evidence: Domain crate has no std::io path. Cannot write to stdout.
-    enforcement_level: compile-time
+    evidence: 'Domain, infrastructure, and framework crates each declare `[lints.clippy] print_stdout
+      = ''deny''` and `print_stderr = ''deny''` in their Cargo.toml. A `println!` in domain
+      or infrastructure code fails `cargo clippy` (lint-level, not just compile-time). Verified:
+      adding `println!("x")` to domain code produces `error: use of println!` under the print_stdout
+      lint and the compile fails. The cli crate (presentation layer) is exempt — it is the
+      only crate authorized to write to stdout/stderr via the Output struct.'
+    enforcement_level: linter
     tests:
-    - cargo check --workspace
-    violation_tests:
-    - crates/domain/tests/violations/domain_imports_infrastructure.rs
+    - just ckeletin-clippy
+    violation_evidence: 'crates/domain/Cargo.toml, crates/infrastructure/Cargo.toml, and .ckeletin/crate/Cargo.toml
+      each carry `[lints.clippy] print_stdout = ''deny'' / print_stderr = ''deny''`. These
+      lints run in `just ckeletin-clippy` (part of `just check`, gated by CI). A regression
+      (adding a println! to domain) fails the lint and hence fails CI. Verified during this
+      conformance wave: a temporary println! probe appended to domain code produced `error:
+      use of println!` (clippy::print_stdout) and nonzero clippy exit; the probe was removed
+      before committing.'
   CKSPEC-OUT-006:
     status: met
     evidence: The `version` command and `--version` surface semver (CARGO_PKG_VERSION), source

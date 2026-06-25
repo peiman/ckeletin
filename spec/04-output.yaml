@@ -71,18 +71,45 @@ requirements:
     title: Standardized output envelope
     level: SHOULD
     since: v0.2.0
+    modified: v0.9.0
     checkable: true
     description: >
       Machine-readable output SHOULD use a standardized envelope
       with at minimum: status (success or error), command identifier,
-      data payload (null on error), and error details (null on
-      success). Commands MAY customize the data payload shape but
-      the envelope structure SHOULD be consistent across all commands.
+      data payload, and error details. Commands MAY customize the data
+      payload shape but the envelope structure SHOULD be consistent
+      across all commands. The envelope is a TOTAL schema: when used,
+      every key MUST be present in every envelope, and an absent value
+      (data on error, error on success) MUST be emitted as JSON `null`,
+      never omitted. A consumer can then parse any ckeletin CLI's output
+      with one fixed key set instead of probing for optional keys.
     rationale: >
       Single Source of Truth (Principle 7) — one envelope format
-      means consumers learn the structure once. Platforms, Not
-      Features (Principle 5) — a standard envelope is a platform
-      that tooling, agents, and scripts build on.
+      means consumers learn the structure once; a fixed key set is the
+      thing learned. Platforms, Not Features (Principle 5) — a standard
+      envelope is a platform that tooling, agents, and scripts build on,
+      and a platform needs a stable, total shape rather than one whose
+      keys appear and disappear. Truth-Seeking (Principle 1) — explicit
+      `null` says "this field exists, no value"; an omitted key cannot be
+      told apart from a field missing through a bug or an older binary.
+      Automated Enforcement (Principle 9) — a total key set validates
+      against one flat schema a conformance check can assert, where an
+      omit-when-absent shape needs a conditional success/error schema.
+    notes: >
+      Resolved divergence (issue #19): the two reference
+      implementations had diverged — ckeletin-go emits all four keys with
+      explicit `null` (no `omitempty`), ckeletin-rust omitted absent keys
+      (serde `skip_serializing_if`). The spec picks the TOTAL schema:
+      present-and-null over omitted. The cost falls on ckeletin-rust (drop
+      the two `skip_serializing_if` attributes on the envelope's data/error
+      fields), not on go — the choice serves the consumer/platform, not
+      whichever implementation is less work. Letting each implementation
+      choose was rejected: it would defeat the cross-implementation point
+      of OUT-003 (an agent parsing any ckeletin CLI the same way) and so
+      violate Platforms, Not Features (Principle 5) and Single Source of
+      Truth (Principle 7) across implementations. The structured shape of
+      the error field is a separate question (a SHOULD), left to a later
+      refinement.
 
   - id: CKSPEC-OUT-004
     title: Shadow logging
