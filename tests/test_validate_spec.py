@@ -66,7 +66,7 @@ class TestSpecFileStructure:
         data = load_spec_file(path)
         for req in data.get("requirements", []):
             errors = validate_requirement_fields(req, "bad_spec_missing_fields.yaml")
-            assert len(errors) > 0, "Should detect missing rationale and checkable"
+            assert len(errors) > 0, "Should detect missing required fields"
 
 
 class TestIdValidation:
@@ -324,9 +324,9 @@ class TestRequirementsGeneration:
         assert reqs, "expected a non-empty requirement set"
 
     def test_collect_all_requirements_has_required_fields(self, spec_dir):
-        """Every collected requirement must have id, title, level, checkable, domain, since."""
+        """Every collected requirement must have id, title, level, verification, domain, since."""
         reqs = collect_all_requirements(spec_dir)
-        required_keys = {"id", "title", "level", "checkable", "domain", "since"}
+        required_keys = {"id", "title", "level", "verification", "domain", "since"}
         for req in reqs:
             missing = required_keys - set(req.keys())
             assert missing == set(), f"{req['id']}: missing keys {missing}"
@@ -446,13 +446,21 @@ class TestEnforcementLevelValidation:
         entry = {"status": "met", "evidence": "x"}
         assert validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml") == []
 
-    def test_test_and_design_are_now_valid(self):
-        """The two levels the harvest legitimised must be accepted."""
-        for level in ("test", "design"):
+    def test_structural_and_test_are_valid(self):
+        """v0.10.0 (FB-001/#16): `structural` and `test` are valid levels."""
+        for level in ("structural", "test"):
             entry = {"status": "met", "evidence": "x", "enforcement_level": level}
             assert validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml") == [], (
                 f"{level} should be a valid enforcement_level"
             )
+
+    def test_design_is_retired(self):
+        """v0.10.0 (FB-001/#16): `design` was retired — it now fails validation."""
+        entry = {"status": "met", "evidence": "x", "enforcement_level": "design"}
+        errors = validate_conformance_entry("CKSPEC-X-001", entry, "f.yaml")
+        assert any("design" in e for e in errors), (
+            f"'design' should no longer be a valid enforcement_level, got: {errors}"
+        )
 
     def test_real_conformance_enforcement_levels_all_valid(self, conformance_dir):
         """Regression guard for the 7 entries (design×6, test×1) that previously

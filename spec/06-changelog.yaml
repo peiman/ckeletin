@@ -17,7 +17,7 @@ requirements:
     title: CHANGELOG.md in repository root
     level: MUST
     since: v0.1.2
-    checkable: true
+    verification: automated
     description: >
       Projects MUST maintain a CHANGELOG.md file in the repository
       root. This file is the single source of truth for the change
@@ -35,7 +35,7 @@ requirements:
     title: Keep a Changelog format
     level: MUST
     since: v0.1.2
-    checkable: true
+    verification: partial
     description: >
       Changelogs MUST follow the Keep a Changelog format. Changes
       MUST be grouped under exactly six categories: Added, Changed,
@@ -54,7 +54,7 @@ requirements:
     title: ISO 8601 dates
     level: MUST
     since: v0.1.2
-    checkable: true
+    verification: automated
     description: >
       All dates in the changelog MUST use ISO 8601 format
       (YYYY-MM-DD). Regional date formats (MM/DD/YYYY,
@@ -70,7 +70,7 @@ requirements:
     title: Semantic Versioning
     level: MUST
     since: v0.1.2
-    checkable: false
+    verification: manual
     description: >
       Projects MUST follow Semantic Versioning (MAJOR.MINOR.PATCH).
       MAJOR for incompatible changes, MINOR for backward-compatible
@@ -87,7 +87,7 @@ requirements:
     title: Unreleased section
     level: MUST
     since: v0.1.2
-    checkable: true
+    verification: automated
     description: >
       The changelog MUST maintain an [Unreleased] section at the
       top. In-progress changes accumulate here. At release time,
@@ -104,7 +104,7 @@ requirements:
     title: Human-curated, not auto-generated
     level: MUST
     since: v0.1.2
-    checkable: false
+    verification: manual
     description: >
       Changelogs MUST be human-curated. Automation tools MAY
       generate a draft from commit history, but the published
@@ -122,7 +122,7 @@ requirements:
     title: Version comparison links
     level: SHOULD
     since: v0.1.2
-    checkable: true
+    verification: automated
     description: >
       Changelogs SHOULD include reference-style Markdown links at
       the bottom that link each version to its diff on the hosting
