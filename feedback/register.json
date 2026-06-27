@@ -6,9 +6,9 @@
       "reporter": "spec-self-review",
       "spec_rule": "CKSPEC-ENF-002",
       "summary": "The `design` enforcement_level is overloaded: in ckeletin-rust's report it labels both structurally-strong enforcement (CKSPEC-ARCH-007 \u2014 a stray root .rs file belongs to no crate and is not built, effectively compile-time) and near-attestation (CKSPEC-CL-004, ENF-003, ENF-004 \u2014 'documented in the CONFORMANCE.md audit table'). One label thus spans the strongest and weakest ends of the ladder and no longer communicates enforcement strength. Surfaced when enforcement_level validation was first added (it was previously unvalidated, so `design`/`test` shipped unchecked). Independently re-confirmed 2026-06-25 by the a0 dogfooding review (its finding #4): the ENF-002 ladder (compile-time, linter, SAST, script, CI, honor-system) and the schema's added `test`/`design` levels disagree, and `design` admittedly spans compile-time-strong to honor-system-weak.",
-      "status": "discussing",
-      "decision": "discuss",
-      "rationale": "Proposed resolution to discuss with the consumer: introduce a distinct `structural` level for the un-buildable cases and route documentation/attestation cases to `honor-system`, then have ckeletin-rust reclassify its 6 `design` entries. Held at `discuss` rather than `update` because the conformance/*.yaml aggregates are regenerated from ckeletin-rust's published data, so the implementation gets a vote before the enum changes; adding `structural` to the schema before any consumer uses it would be decorative vocabulary."
+      "status": "done",
+      "decision": "update",
+      "rationale": "Proposed resolution to discuss with the consumer: introduce a distinct `structural` level for the un-buildable cases and route documentation/attestation cases to `honor-system`, then have ckeletin-rust reclassify its 6 `design` entries. Held at `discuss` rather than `update` because the conformance/*.yaml aggregates are regenerated from ckeletin-rust's published data, so the implementation gets a vote before the enum changes; adding `structural` to the schema before any consumer uses it would be decorative vocabulary. RESOLVED 2026-06-27: landed in the v0.10.0 schema drop (#16, spec PR #45) \u2014 `design` retired, `structural` added, ENF-002 ladder == schema enum. Both impls reclassified (rust: 7 design entries \u2192 structural/script/honor-system; go: 0 design entries)."
     },
     {
       "id": "FB-002",
@@ -65,9 +65,9 @@
       "reporter": "a0-dogfooding",
       "spec_rule": "spec/_schema.yaml (checkable field)",
       "summary": "Several `checkable: true` requirements (e.g. AGENT-001/004, CL-002/006, ENF-003/004) carry semantic-sufficiency claims that grep/file-existence cannot fully verify; the reports honestly fall back to honor-system/design evidence, but the boolean `checkable` overstates what is machine-verifiable. Refs: spec/_schema.yaml:58, spec/05-agent-readiness.yaml:69, spec/06-changelog.yaml:40.",
-      "status": "discussing",
-      "decision": "discuss",
-      "rationale": "Proposed (to discuss): split `checkable` into structurally_checkable / semantically_reviewed / partially_checkable (or equivalent), so the field tells the truth about how much of a requirement a machine can confirm. Held at `discuss` because it is a schema change touching every requirement's metadata and both implementations' report generators; needs an agreed taxonomy before migration."
+      "status": "done",
+      "decision": "update",
+      "rationale": "Proposed (to discuss): split `checkable` into structurally_checkable / semantically_reviewed / partially_checkable (or equivalent), so the field tells the truth about how much of a requirement a machine can confirm. Held at `discuss` because it is a schema change touching every requirement's metadata and both implementations' report generators; needs an agreed taxonomy before migration. RESOLVED 2026-06-27: landed in the v0.10.0 schema drop (#34, spec PR #45) \u2014 boolean `checkable` replaced by `verification: automated|partial|manual` (24/8/9 across 41 reqs); manual covers human judgment OR analytical/formal argument. validate_spec enforces the enum."
     },
     {
       "id": "FB-008",

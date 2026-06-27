@@ -14,7 +14,7 @@ requirements:
     title: Test-driven development
     level: MUST
     since: v0.1.0
-    checkable: false
+    verification: manual
     description: >
       Developers MUST write a failing test before writing the
       implementation code that makes it pass. The test MUST fail for
@@ -34,7 +34,7 @@ requirements:
     title: Minimum coverage threshold
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       Projects MUST enforce a minimum test coverage threshold of 85%
       of statements, measured automatically. The coverage check MUST
@@ -52,7 +52,7 @@ requirements:
     title: Dependency injection over mocking
     level: SHOULD
     since: v0.1.0
-    checkable: false
+    verification: partial
     description: >
       Tests SHOULD inject dependencies through interfaces rather than
       using mock generation frameworks (e.g., gomock, mockery,
@@ -74,7 +74,7 @@ requirements:
     title: Atomic test commits
     level: MUST
     since: v0.1.0
-    checkable: false
+    verification: manual
     description: >
       Tests and the implementation code they validate MUST be
       committed together as a single atomic unit. A commit MUST NOT

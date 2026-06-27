@@ -55,14 +55,26 @@ requirement:
       required: false
       format: "vX.Y.Z"
       description: "Spec version when last changed (omit if never changed)"
-    checkable:
-      type: boolean
+    verification:
+      type: enum
       required: true
+      values: [automated, partial, manual]
       description: >
-        Whether this requirement can be verified programmatically.
-        checkable: true means the requirement CAN be checked by tooling;
-        the enforcement_level in the conformance report captures HOW
-        strongly it is verified in each implementation.
+        How much a machine can confirm this requirement is met (FB-007 /
+        issue #34 — replaces the old boolean `checkable`, which claimed
+        true/false for things that are really partly machine-checkable).
+        automated = a tool verifies the actual property; a green check
+        CONFIRMS the requirement is met. partial = a tool checks a
+        necessary-but-not-sufficient proxy; the check can FALSIFY (catch a
+        clear violation) but a green check does not confirm — human review or
+        analysis closes the gap. manual = no meaningful machine check; the
+        claim is established by human judgment OR a rigorous analytical
+        argument (a proof, a probabilistic bound, a formal model) — analytical
+        verification lives here too (it is strong but point-in-time, so a
+        manual entry resting on analysis SHOULD state its assumptions). The
+        per-implementation enforcement_level (above) captures HOW STRONGLY
+        each impl enforces it; verification captures how verifiable the
+        requirement IS, intrinsically.
     description:
       type: string
       required: true
@@ -100,20 +112,23 @@ conformance_entry:
     enforcement_level:
       type: enum
       required: false
-      values: [compile-time, linter, sast, script, test, ci, design, honor-system]
+      values: [compile-time, structural, linter, sast, script, test, ci, honor-system]
       description: >
-        How this requirement is verified in the implementation.
-        compile-time, linter, sast, script, ci form the automated-tooling
-        ladder (strongest to weakest — see CKSPEC-ENF-002), with
-        honor-system as the last resort. Two further recognised levels:
-        test = an automated behavioural test asserts the property (runs
-        locally and in CI); design = enforced structurally by the
-        design/architecture rather than a running check — its strength
-        varies with the structure (a layout that makes a violation
-        un-buildable is compile-time strong; a documented convention is
-        closer to honor-system). Implementations SHOULD report the
-        strongest level that applies. Omit for non-checkable
-        requirements reported via attestation.
+        How this requirement is verified in the implementation. This enum
+        is the CKSPEC-ENF-002 ladder (strongest to weakest) and MUST NOT
+        drift from it. compile-time = a violation fails to build.
+        structural = a violation cannot build or is not built because of
+        the project's structure (a dependency edge absent from the
+        manifest, a source file outside any compilation unit) — as strong
+        as compile-time, achieved by the build graph rather than a type
+        error. linter / sast / script = automated-tooling rungs. test = a
+        dedicated automated test asserts the property and gates CI. ci = a
+        CI-only check. honor-system = documented convention, human
+        discipline only (last resort). Implementations SHOULD report the
+        strongest level that applies. Omit for non-checkable requirements
+        reported via attestation. (`design` was retired in v0.10.0 — it
+        spanned the whole ladder; its uses reclassify to structural at the
+        strong end or honor-system at the weak end. See FB-001 / issue #16.)
     violation_test:
       type: string
       required: false

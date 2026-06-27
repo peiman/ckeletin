@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-go
-spec_version: 0.9.0
-report_date: '2026-06-25'
+spec_version: 0.10.0
+report_date: '2026-06-27'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -277,7 +277,7 @@ requirements:
     violation_evidence: If the ADR-014 audit table is removed, the grep check fails.
   CKSPEC-ENF-005:
     status: met
-    evidence: task conform validates all 41 requirement IDs are present in conformance-mapping.yaml
+    evidence: task conform validates all 42 requirement IDs are present in conformance-mapping.yaml
       before running checks. Missing IDs cause the generator to fail with a non-zero exit
       code. The count is machine-verified by the ENF-008 drift guard, not hand-maintained.
     enforcement_level: script
@@ -303,9 +303,9 @@ requirements:
     - test/conformance/violation_test.go::TestViolation_ENF006_MissingViolationTestFlagged
   CKSPEC-ENF-007:
     status: met
-    evidence: task conform automatically reports feedback signals when checkable requirements
-      lack violation tests or enforcement level is above honor-system without proof. Signals
-      are structural, not volitional.
+    evidence: task conform automatically reports feedback signals when a requirement's enforcement_level
+      is above honor-system without a violation test or violation evidence. Signals are structural,
+      not volitional.
     enforcement_level: script
     tests:
     - grep -q 'Feedback signals' .ckeletin/scripts/conform.sh
@@ -364,6 +364,27 @@ requirements:
     - grep -q 'out of sync' .ckeletin/scripts/conform.sh
     violation_tests:
     - test/conformance/violation_test.go::TestViolation_ConformReport_OutOfSyncRejected
+  CKSPEC-ENF-011:
+    status: met
+    evidence: 'ckeletin-go''s tree-walking scanners bound their traversal to the project''s
+      own sources and do not descend into nested repository or worktree checkouts. The shared
+      exclusion lives in .ckeletin/scripts/lib/check-output.sh (skips .claude/worktrees/ and
+      any directory carrying its own go.mod — a nested module is never part of this module''s
+      walk); the formatter (format-go.sh) shares that exclusion, and the architecture linter
+      (.go-arch-lint.yml) excludes .claude/ as well. Surfaced by #123 (reported by daana-cli):
+      a scanner descended into Claude Code''s worktree directory and broke on stale nested
+      module checkouts. Verified by test/integration/scanner_exclusion_test.go (TestScannersExcludeClaudeWorktrees):
+      format check, format fix, layering validation, and — in CI, where semgrep is present
+      — the SAST scan each ignore a stale worktree.'
+    enforcement_level: test
+    tests:
+    - grep -q '.claude/worktrees' .ckeletin/scripts/lib/check-output.sh
+    - grep -q '\.claude' .go-arch-lint.yml
+    - test -f test/integration/scanner_exclusion_test.go
+    violation_evidence: Removing the .claude/worktrees exclusion from check-output.sh (or
+      the arch-lint config) lets the scanners descend into nested worktree checkouts again
+      — the corresponding grep check fails, and TestScannersExcludeClaudeWorktrees fails (a
+      stale worktree's unbuildable code is walked and flagged, or breaks the scan).
   CKSPEC-OUT-001:
     status: met
     evidence: ADR-013 defines 3-stream model. Logger writes console to stderr, file to JSON.

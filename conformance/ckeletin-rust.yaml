@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.9.0
-report_date: '2026-06-25'
+spec_version: 0.10.0
+report_date: '2026-06-27'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -128,19 +128,21 @@ requirements:
     evidence: crates/cli/src/main.rs is the bootstrap entry — arg parsing, config loading,
       logging init, and dispatch. Feature logic lives in domain; the entry contains no business
       logic.
-    enforcement_level: design
+    enforcement_level: honor-system
     violation_evidence: 'Structural: only crates/cli/Cargo.toml has [[bin]] target. Domain
       and infrastructure crates are library-only. Entry-point minimality is a structural/design
       property — the compiler enforces that only cli has a bin target, but cannot enforce
-      that main.rs stays minimal (that''s a code-review / coverage judgment). Hence enforcement_level=design,
-      not compile-time.'
+      that main.rs stays minimal (that''s a code-review / coverage judgment). Hence enforcement_level=honor-system
+      for the minimality claim — the compiler structurally enforces that only cli has a bin
+      target, but main.rs minimality rests on review.'
   CKSPEC-ARCH-007:
     status: met
-    evidence: All source lives in designated crate directories; no source files at the workspace
+    evidence: 'All source lives in designated crate directories; no source files at the workspace
       root. Enforced structurally by the Cargo workspace layout (a stray root .rs file belongs
       to no crate and is not built) rather than by a dedicated file-placement linter — hence
-      enforcement_level=design, not compile-time.
-    enforcement_level: design
+      enforcement_level=structural: the layout itself makes a stray root file un-built, so
+      the architecture enforces placement (not a type error, not a linter).'
+    enforcement_level: structural
     tests:
     - cargo check --workspace
     violation_evidence: 'Structural: crates/cli/Cargo.toml has the only [[bin]] target. crates/domain
@@ -171,7 +173,7 @@ requirements:
   CKSPEC-CL-004:
     status: met
     evidence: Cargo.toml version field. CHANGELOG states SemVer adherence.
-    enforcement_level: design
+    enforcement_level: honor-system
     tests:
     - grep -qi 'semantic versioning' CHANGELOG.md
     violation_evidence: The check requires the SemVer-adherence statement in CHANGELOG.md;
@@ -208,7 +210,7 @@ requirements:
   CKSPEC-ENF-002:
     status: met
     evidence: 6 compile-time, 5 pre-commit/CI, 3 honor-system. See enforcement audit table.
-    enforcement_level: design
+    enforcement_level: honor-system
     violation_evidence: 'Analysis: the ladder (compile-time > linter > script > CI > honor)
       is realized across the repo and documented in CONFORMANCE.md''s enforcement audit table
       (which mechanism enforces which rule). Whether the strongest feasible mechanism was
@@ -217,7 +219,7 @@ requirements:
   CKSPEC-ENF-003:
     status: met
     evidence: CONFORMANCE.md enforcement audit table documents all gaps.
-    enforcement_level: design
+    enforcement_level: honor-system
     violation_evidence: 'Analysis: CONFORMANCE.md''s audit table + the documented ENF-007
       feedback signals enumerate every honor-system/partial gap and why. Whether a gap was
       *omitted* cannot be machine-checked (you''d need to know the gap exists), so completeness
@@ -225,7 +227,7 @@ requirements:
   CKSPEC-ENF-004:
     status: met
     evidence: CONFORMANCE.md contains enforcement audit table.
-    enforcement_level: design
+    enforcement_level: honor-system
     violation_evidence: 'Analysis: CONFORMANCE.md maintains the living audit table (decision
       -> mechanism -> level -> status -> gap), reconciled with conformance-mapping.toml. Table
       completeness is a review judgment no check can make. Artifact: CONFORMANCE.md ''Enforcement
@@ -308,6 +310,18 @@ requirements:
     violation_evidence: Unit tests report_projection_is_deterministic / sync_check_detects_drift
       in .ckeletin/conform/src/main.rs prove the report is a stable projection and that drift
       fails the gate; conformance-report.json is the published artifact.
+  CKSPEC-ENF-011:
+    status: met
+    evidence: 'Rust''s tree-walking scanners are bounded target-collectors, not recursive
+      walks, so they cannot descend into nested checkouts (git worktrees, vendored copies):
+      the scaffold scanner in .ckeletin/crate/src/scaffold_scan.rs collects a fixed set (named
+      root manifests, the workflows directory, and each layer crate''s manifest) with no recursion;
+      the conform tool does no file walk; cargo builds only workspace members. Immune by construction.'
+    enforcement_level: structural
+    violation_evidence: 'Structural: .ckeletin/crate/src/scaffold_scan.rs collect_scan_targets
+      is a bounded collector (no recursion, no WalkDir) — descent into a nested checkout is
+      impossible by construction; .ckeletin/conform/src/main.rs does no tree walk. Covered
+      by scaffold_scan unit tests asserting the collected target set.'
   CKSPEC-OUT-001:
     status: met
     evidence: 'output.rs: stdout (data), stderr (tracing status), log file (tracing audit).'
@@ -401,7 +415,7 @@ requirements:
   CKSPEC-TEST-003:
     status: met
     evidence: Writer injection in Output. No mock frameworks in Cargo.lock.
-    enforcement_level: design
+    enforcement_level: script
     tests:
     - '! grep -qiE ''(mockall|mockito|wiremock|double)'' Cargo.lock'
     violation_evidence: The check fails if a mock-framework crate enters Cargo.lock; the writer-injection

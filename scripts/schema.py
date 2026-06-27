@@ -19,6 +19,7 @@ _SCHEMA_PATH = os.path.join(
 # Logical enum name -> (schema kind, field) where its values are defined.
 _ENUM_LOCATIONS = {
     "level": ("requirement", "level"),
+    "verification": ("requirement", "verification"),
     "status": ("conformance_entry", "status"),
     "enforcement_level": ("conformance_entry", "enforcement_level"),
 }

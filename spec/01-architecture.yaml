@@ -14,7 +14,7 @@ requirements:
     title: Four-layer architecture
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       Projects MUST organize source code into four layers: Entry, Command,
       Business Logic, and Infrastructure. The Entry layer is the program
@@ -44,7 +44,7 @@ requirements:
     title: Directed dependencies
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       Dependencies MUST flow from outer layers to inner layers: Entry
       depends on Command, Command depends on Business Logic and
@@ -64,7 +64,7 @@ requirements:
     title: CLI framework isolation
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       Only the Command layer MUST import the CLI framework (e.g., Cobra in
       Go, Click in Python, clap in Rust). Business Logic and Infrastructure
@@ -86,7 +86,7 @@ requirements:
     level: MUST
     since: v0.1.0
     modified: v0.3.0
-    checkable: true
+    verification: partial
     description: >
       Business Logic packages MUST NOT import each other. Each Business
       Logic package MUST depend only on the Infrastructure layer (shared
@@ -125,7 +125,7 @@ requirements:
     title: Infrastructure independence
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       The Infrastructure layer MUST NOT depend on the Business Logic layer
       or the Command layer. Infrastructure provides shared services
@@ -143,7 +143,7 @@ requirements:
     title: Entry point minimality
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: partial
     description: >
       The program entry point MUST contain only bootstrap logic: initialize
       the command layer and handle top-level errors. It MUST NOT contain
@@ -160,7 +160,7 @@ requirements:
     title: Package location enforcement
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: automated
     description: >
       Source files MUST reside only in designated directories. The project
       root MUST contain only the entry point file (and its test file, if

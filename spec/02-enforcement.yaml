@@ -13,7 +13,7 @@ requirements:
     title: Automated enforcement required
     level: MUST
     since: v0.1.0
-    checkable: false
+    verification: manual
     description: >
       Every architectural decision that CAN be verified by a tool
       MUST have automated enforcement. Manual review alone is
@@ -35,14 +35,22 @@ requirements:
     title: Enforcement ladder
     level: SHOULD
     since: v0.1.0
-    modified: v0.3.0
-    checkable: false
+    modified: v0.10.0
+    verification: manual
     description: >
-      Enforcement SHOULD use the strongest feasible mechanism. In
-      order of preference: (1) compile-time / type system,
-      (2) linter, (3) static analysis / SAST, (4) validator script,
-      (5) CI-only check, (6) honor system (last resort). Higher
-      levels catch violations earlier and cost less to maintain.
+      Enforcement SHOULD use the strongest feasible mechanism. From
+      strongest to weakest: (1) compile-time — a violation fails to
+      build (type system); (2) structural — a violation cannot build
+      or is not built because of the project's structure (a dependency
+      edge absent from the manifest, a source file outside any
+      compilation unit); as strong as compile-time, achieved by the
+      build graph / layout rather than a type error; (3) linter;
+      (4) static analysis / SAST; (5) validator script; (6) automated
+      test — a dedicated test asserts the property and gates CI;
+      (7) CI-only check; (8) honor system (last resort). Higher levels
+      catch violations earlier and cost less to maintain. This list is
+      the enforcement_level vocabulary; the conformance schema enum and
+      this ladder are the same set (SSOT) and MUST NOT drift.
     rationale: >
       Automated Enforcement (Principle 9) prefers mechanisms that
       catch violations as early as possible. Compile-time enforcement
@@ -66,7 +74,7 @@ requirements:
     title: Document enforcement gaps
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: partial
     description: >
       Architectural decisions that cannot be fully automated MUST
       explicitly document: what IS automated (and by which tool),
@@ -81,7 +89,7 @@ requirements:
     title: Enforcement audit table
     level: MUST
     since: v0.1.0
-    checkable: true
+    verification: partial
     description: >
       Projects MUST maintain a living enforcement audit table that
       tracks every architectural decision, its enforcement mechanism,
@@ -101,7 +109,7 @@ requirements:
     title: Conformance mapping completeness
     level: MUST
     since: v0.3.0
-    checkable: true
+    verification: automated
     description: >
       Conformance report generators MUST validate that their mapping
       covers every requirement in the target spec version before
@@ -122,7 +130,7 @@ requirements:
     level: MUST
     since: v0.3.0
     modified: v0.4.0
-    checkable: true
+    verification: automated
     description: >
       Enforcement claims above honor-system in conformance reports
       MUST be accompanied by proof that the enforcement mechanism
@@ -175,7 +183,7 @@ requirements:
     title: Automatic feedback signals
     level: SHOULD
     since: v0.3.0
-    checkable: true
+    verification: automated
     description: >
       Conformance report generators SHOULD automatically include
       feedback signals when: (1) a checkable requirement has no
@@ -196,7 +204,7 @@ requirements:
     title: Anchored conformance evidence
     level: MUST
     since: v0.6.0
-    checkable: true
+    verification: automated
     description: >
       Every requirement a conformance report marks as met MUST be
       anchored to verifiable evidence: either (1) an automated check
@@ -238,7 +246,7 @@ requirements:
     level: MUST
     since: v0.6.0
     modified: v0.9.0
-    checkable: true
+    verification: automated
     description: >
       An implementation MUST continuously verify its conformance
       against the latest spec version, and MUST NOT publish a release
@@ -297,7 +305,7 @@ requirements:
     title: Published machine-readable conformance report
     level: MUST
     since: v0.7.0
-    checkable: true
+    verification: automated
     description: >
       An implementation MUST publish a deterministic, machine-readable
       conformance report — a per-requirement projection of its own
@@ -327,3 +335,35 @@ requirements:
       sync-guarded by task conform) which the spec repo's
       aggregate_conformance.py consumes. HOW is the implementation's
       choice; the published, aggregatable report is not.
+
+  - id: CKSPEC-ENF-011
+    title: Tooling robustness to nested checkouts
+    level: MUST
+    since: v0.10.0
+    verification: partial
+    description: >
+      Tooling that walks the project tree to enforce or verify conformance
+      (linters, scanners, conformance generators) MUST bound its traversal to
+      the project's own sources: it MUST NOT descend into nested repository or
+      worktree checkouts (git worktrees, vendored module copies, nested
+      modules), and MUST NOT silently pass or fail when unbuildable nested
+      code is present. A scaffold with no tree-walking tooling satisfies this
+      vacuously.
+    rationale: >
+      Truth-Seeking (Principle 1) — a gate that errors-and-skips, or walks a
+      nested copy and flags its content, reports a result it never actually
+      verified against the project's own sources. Automated Enforcement
+      (Principle 9) — the enforcement tooling itself must be robust, not just
+      the rules it checks.
+    notes: >
+      Surfaced by ckeletin-go #123 (reported by the daana-cli team): a
+      file-walking scanner descended into Claude Code's worktree directory and
+      broke on stale nested module checkouts. Stated as the class, not the
+      instance — a tool's worktree dir is one example; vendored copies and
+      nested modules are others. Both reference implementations already
+      satisfy it: ckeletin-go bounds its walk with an explicit exclusion
+      (#123); ckeletin-rust is immune by construction — its scanners are
+      bounded target-collectors (named files + designated layer directories),
+      not recursive tree-walks. verification is `partial`: a test confirms the
+      tool handles specific nested-checkout cases, but the general "never
+      breaks on any nested code" property is not fully machine-confirmable.

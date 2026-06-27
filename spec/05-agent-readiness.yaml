@@ -15,7 +15,7 @@ requirements:
     title: Universal agent guide
     level: MUST
     since: v0.2.0
-    checkable: true
+    verification: partial
     description: >
       Projects MUST have an AGENTS.md file containing all project
       knowledge that any AI agent needs: architecture, commands,
@@ -32,7 +32,7 @@ requirements:
     title: No provider-specific content in universal guide
     level: MUST
     since: v0.2.0
-    checkable: true
+    verification: partial
     description: >
       AGENTS.md MUST NOT contain instructions specific to any single
       LLM provider. No Claude-specific rules, no Gemini-specific
@@ -48,7 +48,7 @@ requirements:
     title: Provider-specific guides follow provider guidance
     level: SHOULD
     since: v0.2.0
-    checkable: false
+    verification: manual
     description: >
       When targeting specific LLMs, projects SHOULD create dedicated
       guide files (e.g., CLAUDE.md, GEMINI.md). These files SHOULD
@@ -65,7 +65,7 @@ requirements:
     title: Agent guide completeness
     level: SHOULD
     since: v0.2.0
-    checkable: false
+    verification: manual
     description: >
       AGENTS.md SHOULD contain enough information for an agent to
       perform common tasks without reading additional documentation.
@@ -82,7 +82,7 @@ requirements:
     title: CLI as the agent interface
     level: MUST
     since: v0.2.0
-    checkable: false
+    verification: manual
     description: >
       The CLI MUST be the primary interface for agent interaction.
       Agents run commands and parse responses (using the machine-
@@ -102,7 +102,7 @@ requirements:
     title: Machine-readable command catalog
     level: SHOULD
     since: v0.8.0
-    checkable: true
+    verification: automated
     description: >
       The CLI SHOULD expose its own command surface as machine-
       readable structured data — a catalog enumerating every command,
@@ -161,7 +161,7 @@ requirements:
     title: Scaffold artifact ownership boundary
     level: MUST
     since: v0.9.0
-    checkable: true
+    verification: automated
     description: >
       A project derived by scaffolding from a reference implementation MUST
       NOT present the reference implementation's truth as its own.

@@ -14,7 +14,7 @@ requirements:
     title: Three-stream output separation
     level: MUST
     since: v0.2.0
-    checkable: true
+    verification: automated
     description: >
       Projects MUST separate output into three streams: (1) Data
       stream to stdout — the product of the command, (2) Status
@@ -35,7 +35,7 @@ requirements:
     level: MUST
     since: v0.2.0
     modified: v0.8.0
-    checkable: true
+    verification: automated
     description: >
       Every command MUST support a machine-readable output mode
       activated via flag or configuration. When active, stdout MUST
@@ -81,7 +81,7 @@ requirements:
     level: SHOULD
     since: v0.2.0
     modified: v0.9.0
-    checkable: true
+    verification: automated
     description: >
       Machine-readable output SHOULD use a standardized envelope
       with at minimum: status (success or error), command identifier,
@@ -124,7 +124,7 @@ requirements:
     title: Shadow logging
     level: MUST
     since: v0.2.0
-    checkable: true
+    verification: automated
     description: >
       Every user-facing output operation MUST simultaneously log
       the raw data to the audit stream (log file). The audit log
@@ -142,7 +142,7 @@ requirements:
     title: Output isolation from business logic
     level: MUST
     since: v0.2.0
-    checkable: true
+    verification: automated
     description: >
       Business logic MUST NOT write directly to stdout or stderr.
       All output MUST go through a rendering layer that handles
@@ -159,7 +159,7 @@ requirements:
     title: Build identity in version output
     level: MUST
     since: v0.5.0
-    checkable: true
+    verification: automated
     description: >
       The CLI MUST surface its build provenance in version output: at
       minimum the semantic version, the source commit identifier, a

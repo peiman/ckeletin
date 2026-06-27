@@ -53,6 +53,8 @@ ID_PATTERN = re.compile(r"^CKSPEC-[A-Z]+-\d{3}$")
 
 VALID_LEVELS = enum_values("level", _SCHEMA)
 
+VALID_VERIFICATIONS = enum_values("verification", _SCHEMA)
+
 VALID_STATUSES = enum_values("status", _SCHEMA)
 
 VALID_ENFORCEMENT_LEVELS = enum_values("enforcement_level", _SCHEMA)
@@ -104,7 +106,7 @@ def collect_all_requirements(directory):
     """Collect full requirement metadata from spec files.
 
     Returns list of dicts sorted by ID with fields: id, title, level,
-    checkable, domain, since, and optionally modified.
+    verification, domain, since, and optionally modified.
     """
     requirements = []
     for fname in sorted(os.listdir(directory)):
@@ -122,7 +124,7 @@ def collect_all_requirements(directory):
                 "id": req["id"],
                 "title": req.get("title", ""),
                 "level": req.get("level", ""),
-                "checkable": req.get("checkable", False),
+                "verification": req.get("verification", ""),
                 "domain": domain_name,
                 "since": req.get("since", ""),
             }
@@ -201,6 +203,17 @@ def validate_level(level):
     errors = []
     if level not in VALID_LEVELS:
         errors.append(f"'{level}' is not a valid level (must be MUST, SHOULD, or MAY)")
+    return errors
+
+
+def validate_verification(verification):
+    """Check that a requirement's verification tier is a valid enum value."""
+    errors = []
+    if verification not in VALID_VERIFICATIONS:
+        errors.append(
+            f"'{verification}' is not a valid verification tier "
+            f"(must be one of: {', '.join(sorted(VALID_VERIFICATIONS))})"
+        )
     return errors
 
 
@@ -389,6 +402,8 @@ def validate_all(spec_dir, conformance_dir):
                 all_ids.append((req["id"], fname))
             if "level" in req:
                 all_errors.extend(validate_level(req["level"]))
+            if "verification" in req:
+                all_errors.extend(validate_verification(req["verification"]))
 
     all_errors.extend(validate_id_uniqueness(all_ids))
 
