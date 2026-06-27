@@ -204,6 +204,7 @@ requirements:
     title: Anchored conformance evidence
     level: MUST
     since: v0.6.0
+    modified: v0.11.0
     verification: automated
     description: >
       Every requirement a conformance report marks as met MUST be
@@ -214,7 +215,12 @@ requirements:
       and states why no automated check is possible. A met status
       with neither an automated check nor an analysis-with-evidence
       anchor MUST cause the conformance generator to fail rather than
-      emit an unanchored claim.
+      emit an unanchored claim. An anchor MUST also RESOLVE, not merely
+      be present: a path-like anchor MUST name a file that exists, and a
+      `file::symbol` anchor MUST name a symbol present in that file. The
+      generator MUST fail on a dangling anchor (a named file or symbol
+      that does not exist) — a stale anchor, e.g. a renamed test still
+      cited by its old name, is no better than no anchor.
     rationale: >
       Truth-Seeking (Principle 1) demands that "met" mean "shown to be
       met", not "asserted to be met". CKSPEC-ENF-006 already requires

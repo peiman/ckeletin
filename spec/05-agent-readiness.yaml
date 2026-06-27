@@ -32,6 +32,7 @@ requirements:
     title: No provider-specific content in universal guide
     level: MUST
     since: v0.2.0
+    modified: v0.11.0
     verification: partial
     description: >
       AGENTS.md MUST NOT contain instructions specific to any single
@@ -43,6 +44,17 @@ requirements:
       and provider-specific behavior are different concerns. Mixing
       them creates confusion where agents follow instructions
       intended for a different LLM.
+    notes: >
+      Reference check (#27): a conformant automated check greps AGENTS.md
+      for provider names (Claude, Gemini, Copilot, Cursor, …) and excludes
+      lines that are file cross-references (`see CLAUDE.md`, copilot-
+      instructions, `.cursorrules`): a provider name MAY appear only as a
+      cross-reference, never as instruction content. Implementations SHOULD
+      converge on this pattern rather than each inventing a differently-leaky
+      grep. Known residual gap (this is why verification is `partial`, not
+      `automated`): a provider-specific instruction sharing a line with a
+      legitimate cross-reference escapes the filter — an unlikely authoring
+      pattern, but not machine-excluded, so human review backstops it.
 
   - id: CKSPEC-AGENT-003
     title: Provider-specific guides follow provider guidance
