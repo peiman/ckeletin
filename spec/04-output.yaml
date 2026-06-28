@@ -34,7 +34,7 @@ requirements:
     title: Machine-readable output mode
     level: MUST
     since: v0.2.0
-    modified: v0.8.0
+    modified: v0.11.0
     verification: automated
     description: >
       Every command MUST support a machine-readable output mode
@@ -76,11 +76,21 @@ requirements:
       text`) and fixed it with a single resolver. Both reference
       implementations resolve flag-over-config today.
 
+      Exemptions (#25): a command MAY be exempt from this requirement when
+      (a) its sole output is an artifact consumed directly by another program
+      in a format that program dictates — a shell completion script
+      (`source <(app completion bash)`), a man page — where wrapping it in the
+      envelope would break the documented consumption contract; or (b) it is
+      excluded from released builds (a build-tag- or feature-gated dev command).
+      Exemptions MUST be declared (e.g. in the conformance report or command
+      metadata), never silent — an agent must be able to tell an exempt command
+      from one that simply forgot to support machine-readable mode.
+
   - id: CKSPEC-OUT-003
     title: Standardized output envelope
     level: SHOULD
     since: v0.2.0
-    modified: v0.9.0
+    modified: v0.11.0
     verification: automated
     description: >
       Machine-readable output SHOULD use a standardized envelope
@@ -91,7 +101,12 @@ requirements:
       every key MUST be present in every envelope, and an absent value
       (data on error, error on success) MUST be emitted as JSON `null`,
       never omitted. A consumer can then parse any ckeletin CLI's output
-      with one fixed key set instead of probing for optional keys.
+      with one fixed key set instead of probing for optional keys. When the
+      error field is populated, it SHOULD be a structured object — at minimum
+      a human-readable `message`, plus a stable machine-readable `code` an
+      agent can branch on without parsing prose (`null` when the implementation
+      has none). The total-schema rule applies within the error object too:
+      declared keys are always present, absent values are `null`.
     rationale: >
       Single Source of Truth (Principle 7) — one envelope format
       means consumers learn the structure once; a fixed key set is the
@@ -116,14 +131,24 @@ requirements:
       choose was rejected: it would defeat the cross-implementation point
       of OUT-003 (an agent parsing any ckeletin CLI the same way) and so
       violate Platforms, Not Features (Principle 5) and Single Source of
-      Truth (Principle 7) across implementations. The structured shape of
-      the error field is a separate question (a SHOULD), left to a later
-      refinement.
+      Truth (Principle 7) across implementations.
+
+      Error-object shape (#40, v0.11.0): the error field, when populated,
+      SHOULD be a structured object `{ code, message }` — `message`
+      human-readable, `code` a stable identifier an agent can branch on (or
+      `null`). A bare error string is permitted but discouraged: an agent can
+      switch on a `code` but not on prose. ckeletin-go already emits a
+      JSONError object — its `code` drops `omitempty` to satisfy the
+      total-schema present-and-null rule; ckeletin-rust moves from
+      `error: Option<String>` to the structured object. The deeper nesting
+      (per-field error details) is left open; the `{code, message}` core is
+      the cross-implementation contract.
 
   - id: CKSPEC-OUT-004
     title: Shadow logging
     level: MUST
     since: v0.2.0
+    modified: v0.11.0
     verification: automated
     description: >
       Every user-facing output operation MUST simultaneously log
@@ -131,12 +156,32 @@ requirements:
       MUST contain at least the data that was rendered to the user,
       plus structured metadata (timestamp, command, log level). The
       audit stream is always active regardless of output mode.
+      Failure semantics (#18): audit-stream initialization failure (e.g.
+      an unwritable log directory) MUST surface as a normal error — the
+      structured error envelope and a non-zero exit — never a panic or
+      crash. The audit writer's lifetime MUST extend through error
+      rendering, so error events reach the audit log: a command failure
+      MUST NOT be recorded as a success or lost. A shadow-log event MUST
+      NOT be emitted before the user-facing write it shadows, so a write
+      that fails is not preceded by a log claiming it happened.
     rationale: >
       Truth-Seeking (Principle 1) — the audit log is the evidence
       of what happened. When debugging agent interactions or
       investigating failures, the user-visible output is often too
       brief. Shadow logging ensures the full context is always
-      recoverable without requiring verbose mode.
+      recoverable without requiring verbose mode. The failure semantics
+      keep the log honest: an audit trail that records a failed command
+      as succeeded, or that crashes the program when it cannot be
+      written, is worse than no log.
+    notes: >
+      Generated artifacts (#26): for an operation whose output is a
+      generated artifact (rendered documentation, a config file), the audit
+      entry MAY record operation metadata — artifact type, destination, size,
+      content hash — instead of the full content, provided the artifact is
+      reproducible from versioned inputs. The audit value is "what happened";
+      duplicating a multi-KB artifact into the log bloats it without adding
+      auditability. Interactive output (messages, check results) still logs
+      the rendered data.
 
   - id: CKSPEC-OUT-005
     title: Output isolation from business logic
