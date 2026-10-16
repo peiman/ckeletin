@@ -77,6 +77,15 @@
       "status": "done",
       "decision": "update",
       "rationale": "Proposed (to discuss): clarify the README wording, e.g. 'not punitive audits; they are evidence retrospectives backed by an enforcement audit table', so 'audit' has one consistent meaning. Held at `discuss` only to batch it with the other wording decisions; trivial to apply once the framing is agreed. RESOLVED 2026-06-25: README.md updated to 'evidence retrospectives, not punitive audits, even though each is backed by an enforcement audit table (CKSPEC-ENF-004)' \u2014 'audit' now refers consistently to the ENF-004 audit table. Pure prose, no impl vote needed; no spec_version impact."
+    },
+    {
+      "id": "FB-009",
+      "reporter": "downstream-maintainers",
+      "spec_rule": "CKSPEC-UPD-001",
+      "summary": "A derived project is not told, by the spec, when the framework it vendors has a newer version, and the two implementations disagree about what 'newer' means. ckeletin-go counts commits on .ckeletin/ behind upstream during task check. ckeletin-rust compares .ckeletin/VERSION by string inequality, only when an explicit command is run, so a local version ahead of upstream is reported as an update and just check stays silent. Both already have a framework-only update command with a dry run and a compatibility check that discards the candidate. The gap is the notice, the comparison, and a machine-readable result an agent can poll.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "RESOLVED 2026-10-16 in spec 0.12.0: CKSPEC-UPD-001 (notice on the ordinary gate when upstream framework version is a newer semver; non-fatal, off in CI, opt-out, offline-safe, upstream exempt), CKSPEC-UPD-002 (one command replaces only the framework, explicit ref, default branch, dry run, discarded compatibility check, version before and after; .ckeletin/VERSION is the version, a git tag is only a pin), CKSPEC-UPD-003 (machine-readable check and update result). Both implementations satisfy them: ckeletin-go framework 0.2.1 and ckeletin-rust framework 0.2.29. Held until both could meet the new MUSTs before the spec advanced (Principle 10)."
     }
   ]
 }

@@ -7,6 +7,14 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-16
+
+### Added
+
+- CKSPEC-UPD-001: a derived project, during its ordinary quality gate, is told when the upstream framework version is a newer semantic version than its own. The notice does not fail the build, does not run in continuous integration, can be turned off, and does not fail offline or without an upstream remote. The upstream repository is exempt. The comparison is the framework version, not a commit count and not the application version.
+- CKSPEC-UPD-002: one command replaces only the framework tree. It accepts an explicit upstream ref, defaults to the upstream default branch, has a dry run and a compatibility check that discards its result, and reports the framework version before and after. A git tag is only a pin.
+- CKSPEC-UPD-003: the check and the update result are machine-readable, so an agent can poll and apply an update without scraping prose.
+
 ## [0.11.0] - 2026-06-27
 
 ### Changed
