@@ -6,13 +6,13 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-go
-spec_version: 0.11.0
-report_date: '2026-06-29'
+spec_version: 0.12.0
+report_date: '2026-10-16'
 requirements:
   CKSPEC-AGENT-001:
     status: met
-    evidence: AGENTS.md exists (358+ lines). Covers project purpose, directory structure,
-      all task commands, coding conventions, ADR lookup, testing strategy, troubleshooting.
+    evidence: AGENTS.md exists. Covers project purpose, where code goes, task commands, hard
+      rules, ADR lookup, testing strategy, troubleshooting.
     enforcement_level: script
     tests:
     - test -f AGENTS.md
@@ -39,8 +39,9 @@ requirements:
       this mapping against a doctored copy.'
   CKSPEC-AGENT-003:
     status: met
-    evidence: CLAUDE.md references AGENTS.md first. No project knowledge duplicated. .cursorrules
-      and copilot-instructions.md also reference AGENTS.md.
+    evidence: CLAUDE.md imports AGENTS.md and holds only Claude Code behavior (editor, hooks,
+      unused variables). .cursorrules and copilot-instructions.md point at AGENTS.md and do
+      not restate project rules.
     enforcement_level: script
     tests:
     - grep -qE 'AGENTS\.md' CLAUDE.md
@@ -277,7 +278,7 @@ requirements:
     violation_evidence: If the ADR-014 audit table is removed, the grep check fails.
   CKSPEC-ENF-005:
     status: met
-    evidence: task conform validates all 42 requirement IDs are present in conformance-mapping.yaml
+    evidence: task conform validates all 45 requirement IDs are present in conformance-mapping.yaml
       before running checks. Missing IDs cause the generator to fail with a non-zero exit
       code. The count is machine-verified by the ENF-008 drift guard, not hand-maintained.
     enforcement_level: script
@@ -530,3 +531,48 @@ requirements:
     violation_evidence: Whether a commit atomically pairs a test with its implementation is
       a review judgment over commit contents, not a mechanically decidable property. Mandated
       by AGENTS.md and enforced at review.
+  CKSPEC-UPD-001:
+    status: met
+    evidence: task check runs .ckeletin/scripts/check-framework-updates.sh as a non-fatal
+      footer. The script compares .ckeletin/VERSION with ckeletin-upstream/main and prints
+      when upstream is a newer semver. It names task ckeletin:update. It exits 0, skips when
+      CI is set, skips when CKELETIN_SKIP_UPDATE_CHECK=1, stays silent when the fetch fails
+      or the remote is missing, and does not run in the upstream module. A commit that does
+      not change VERSION does not notify. A local version ahead of upstream does not notify.
+    enforcement_level: test
+    tests:
+    - test -f .ckeletin/scripts/check-framework-updates.sh
+    - go test -count=1 -timeout 180s -run 'TestUpdateNudge' ./test/integration/
+    violation_evidence: 'test/integration/framework_update_nudge_test.go asserts the notice,
+      the non-version commit, the local-ahead case, CI, the opt-out, and a failed fetch. TestUpdateNudge_IgnoresNonVersionCommit
+      is the violation case: a .ckeletin/ commit that leaves VERSION unchanged must not print
+      "Framework update available".'
+  CKSPEC-UPD-002:
+    status: met
+    evidence: task ckeletin:update checks out only .ckeletin/ from an explicit ref (version=)
+      or from ckeletin-upstream/main, the upstream default branch. task ckeletin:update:dry-run
+      prints the diff and changes nothing. task ckeletin:update:check-compatibility applies
+      the candidate and restores it. The command prints the framework version before and after
+      (v$OLD_VERSION → v$NEW_VERSION). .ckeletin/VERSION is that version. version= is a git
+      tag, a pin, not a second version.
+    enforcement_level: script
+    tests:
+    - grep -q 'git checkout "$CHECKOUT_REF" -- .ckeletin/' .ckeletin/Taskfile.yml
+    - grep -q 'update:dry-run' .ckeletin/Taskfile.yml
+    - grep -q 'update:check-compatibility' .ckeletin/Taskfile.yml
+    - 'grep -q ''Updated: v$OLD_VERSION'' .ckeletin/Taskfile.yml'
+    violation_evidence: .ckeletin/Taskfile.yml is the update command. The checkout path is
+      .ckeletin/ only. The dry-run and check-compatibility tasks are the read-only and discard
+      paths. docs/framework-updates.md describes the same three commands.
+  CKSPEC-UPD-003:
+    status: met
+    evidence: task ckeletin:check-update format=json prints current, latest, and update_available
+      from the same script as the notice. task ckeletin:update prints CKELETIN_UPDATE_RESULT
+      with from, to, and committed.
+    enforcement_level: test
+    tests:
+    - grep -q 'CKELETIN_UPDATE_RESULT' .ckeletin/Taskfile.yml
+    - grep -q -- '--json' .ckeletin/Taskfile.yml
+    violation_evidence: test/integration/framework_update_nudge_test.go TestUpdateNudge_JSON
+      parses the object and requires current, latest, and update_available. The update result
+      line is CKELETIN_UPDATE_RESULT in .ckeletin/Taskfile.yml.

@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.11.0",
+  "spec_version": "0.12.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -345,6 +345,30 @@
       "verification": "manual",
       "domain": "Testing",
       "since": "v0.1.0"
+    },
+    {
+      "id": "CKSPEC-UPD-001",
+      "title": "Notice when a newer framework version exists",
+      "level": "MUST",
+      "verification": "automated",
+      "domain": "Framework Updates",
+      "since": "v0.12.0"
+    },
+    {
+      "id": "CKSPEC-UPD-002",
+      "title": "One command updates only the framework",
+      "level": "MUST",
+      "verification": "automated",
+      "domain": "Framework Updates",
+      "since": "v0.12.0"
+    },
+    {
+      "id": "CKSPEC-UPD-003",
+      "title": "Machine-readable update status",
+      "level": "SHOULD",
+      "verification": "automated",
+      "domain": "Framework Updates",
+      "since": "v0.12.0"
     }
   ]
 }

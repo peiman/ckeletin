@@ -7,6 +7,14 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-16
+
+### Added
+
+- CKSPEC-UPD-001: a derived project, during its ordinary quality gate, is told when the upstream framework version is a newer semantic version than its own. The notice does not fail the build, does not run in continuous integration, can be turned off, and does not fail offline or without an upstream remote. The upstream repository is exempt. The comparison is the framework version, not a commit count and not the application version.
+- CKSPEC-UPD-002: one command replaces only the framework tree. It accepts an explicit upstream ref, defaults to the upstream default branch, has a dry run and a compatibility check that discards its result, and reports the framework version before and after. A git tag is only a pin.
+- CKSPEC-UPD-003: the check and the update result are machine-readable, so an agent can poll and apply an update without scraping prose.
+
 ## [0.11.0] - 2026-06-27
 
 ### Changed
@@ -140,7 +148,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - Lean start: 3 core domains. More added when ckeletin-rust needs them.
 - No gate zero yet — deferred until second implementation exists.
 
-[Unreleased]: https://github.com/peiman/ckeletin/compare/b063c5fc65db5d18172c91881a9642bc349a3317...HEAD
+[Unreleased]: https://github.com/peiman/ckeletin/compare/8d06a2384850322906e03b5cc9d4bf81797bc499...HEAD
+[0.12.0]: https://github.com/peiman/ckeletin/compare/b063c5fc65db5d18172c91881a9642bc349a3317...8d06a2384850322906e03b5cc9d4bf81797bc499
 [0.11.0]: https://github.com/peiman/ckeletin/compare/940a335f40005972b1120a5f144a35ab1926887d...b063c5fc65db5d18172c91881a9642bc349a3317
 [0.10.0]: https://github.com/peiman/ckeletin/compare/cf645df4f75e3f7778dcc23f982b9a0e64b55630...940a335f40005972b1120a5f144a35ab1926887d
 [0.9.0]: https://github.com/peiman/ckeletin/compare/33078a6754f0ad8bc3ac13b65204420601f11e58...cf645df4f75e3f7778dcc23f982b9a0e64b55630

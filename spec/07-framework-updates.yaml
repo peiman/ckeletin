@@ -1,0 +1,98 @@
+# spec/07-framework-updates.yaml
+# How a derived project learns that the framework moved, and how it applies that move.
+#
+# The framework tree and the application's code are different things.
+# The framework version is the version recorded for that tree.
+
+domain:
+  name: Framework Updates
+  description: >
+    A derived project keeps its own code and takes framework improvements
+    from upstream. It must be told when a newer framework version exists,
+    during the check it already runs, and it must have one command that
+    replaces only the framework.
+
+requirements:
+  - id: CKSPEC-UPD-001
+    title: Notice when a newer framework version exists
+    level: MUST
+    since: v0.12.0
+    verification: automated
+    description: >
+      A derived project, while running its ordinary quality gate, MUST be
+      told when the upstream framework version is a newer semantic version
+      than the framework version it has. The framework version is the
+      version recorded for the framework tree — the version a person is
+      shown for that tree — not the application's version and not a count
+      of commits. A local framework version that is equal to or newer than
+      upstream is not an update. The notice MUST name the command that
+      applies the update. The notice MUST NOT fail the build, MUST NOT run
+      in continuous integration, MUST be possible to turn off, and MUST NOT
+      fail when the check is offline or when no upstream remote is
+      configured. The upstream repository itself is exempt.
+    rationale: >
+      Feedback Cycle (Principle 10) — a derived project learns that the
+      framework moved while it runs the gate it already runs, instead of
+      discovering the change by accident. Automated Enforcement (Principle 9)
+      — the notice is part of that gate, and it must not become a second
+      gate: a missing network or a skipped check cannot turn a correct
+      build red. Single Source of Truth (Principle 7) — one version, the
+      framework version, decides whether an update exists. A commit that
+      does not change that version is not an update, and a local version
+      ahead of upstream is not one either.
+    notes: >
+      The comparison is semantic version precedence. A pre-release is older
+      than the release that has the same core version. Two pre-releases of
+      the same core are not, by themselves, an update. The upstream
+      repository has nothing to update from. Continuous integration stays
+      offline; a person or an agent who wants the comparison there runs the
+      explicit update check.
+
+  - id: CKSPEC-UPD-002
+    title: One command updates only the framework
+    level: MUST
+    since: v0.12.0
+    verification: automated
+    description: >
+      An implementation MUST provide one command that replaces the framework
+      tree and does not modify application code. The command MUST accept an
+      explicit upstream ref and MUST default to the upstream default branch.
+      It MUST offer a dry run that changes nothing, and a compatibility
+      check that applies the candidate and then discards it. The command
+      MUST report the framework version before and after the replacement.
+      The version a person is shown is the framework version. A git tag is
+      only a pin to a ref, not a second version.
+    rationale: >
+      Single Source of Truth (Principle 7) — the framework version is the
+      version of the framework tree. A tag names a commit; it does not
+      replace that version. Separation of Concerns (Principle 8) — the
+      framework tree and the application's code are different things, and
+      an update of one must not rewrite the other.
+    notes: >
+      The dry run is read-only. The compatibility check may build or run
+      the project's ordinary gate against the candidate, then restore the
+      previous framework tree even when that check fails. The version
+      before and after may be reported in prose, in a machine-readable
+      result, or in both.
+
+  - id: CKSPEC-UPD-003
+    title: Machine-readable update status
+    level: SHOULD
+    since: v0.12.0
+    verification: automated
+    description: >
+      The update check SHOULD be machine-readable. When a comparison is
+      made, the result SHOULD include the current framework version, the
+      upstream framework version, and whether an update is available. The
+      update command's result SHOULD also be machine-readable, so an agent
+      can tell what happened without scraping prose.
+    rationale: >
+      Feedback Cycle (Principle 10) — agents are consumers of the scaffold.
+      A prose-only notice makes them guess. A stable result lets them see
+      that an update exists and see what the update command did.
+    notes: >
+      The check result names the current version, the latest version, and
+      whether an update is available. The update result names the version
+      before, the version after, and whether the replacement was kept. An
+      implementation may add fields. It does not omit those when it has a
+      comparison or a finished update.
