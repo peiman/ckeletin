@@ -7,6 +7,17 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-17
+
+### Added
+
+- CKSPEC-UPD-004: a derived project can replace the default of a framework option from project-owned configuration outside the framework tree. A framework update leaves that default in effect. An unknown option name fails when configuration is loaded.
+
+### Changed
+
+- CKSPEC-UPD-002: the update command stops when the framework tree has uncommitted changes or a committed local difference, shows that difference, and does not replace or commit it. Discarding a committed difference takes an explicit request, which does not discard uncommitted changes. The dry run shows a local difference and changes nothing. The compatibility check leaves a local difference in place.
+- CKSPEC-UPD-003: when the command stops or discards a local difference, the machine-readable result says which happened and whether the replacement was kept.
+
 ## [0.12.0] - 2026-10-16
 
 ### Added
