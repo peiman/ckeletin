@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.12.0
-report_date: '2026-10-16'
+spec_version: 0.13.0
+report_date: '2026-10-17'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -451,24 +451,50 @@ requirements:
   CKSPEC-UPD-002:
     status: met
     evidence: just ckeletin-update restores only .ckeletin/ from an explicit ref or from ckeletin-upstream/main
-      (the upstream default branch). just ckeletin-update-dry-run prints the diff and changes
-      nothing. just ckeletin-update-check-compatibility applies the candidate and restores
-      it with a trap. The command prints the framework version before and after and sets CKELETIN_UPDATE_RESULT
-      from/to. .ckeletin/VERSION is that version. A git tag passed as the ref is only a pin.
+      (the upstream default branch). Before that restore it compares the committed framework
+      tree with upstream at the recorded .ckeletin/VERSION. Uncommitted changes always stop
+      the command. A committed local difference stops it unless discard_local=true, which
+      says it is discarding that difference and does not discard uncommitted work. just ckeletin-update-dry-run
+      prints a local difference and changes nothing. just ckeletin-update-check-compatibility
+      exits 1 without modifying the tree when a local difference exists, and on a clean tree
+      applies the candidate and restores it with a trap. The command prints the framework
+      version before and after and sets CKELETIN_UPDATE_RESULT from/to. .ckeletin/VERSION
+      is that version. A git tag passed as the ref is only a pin.
     enforcement_level: test
     tests:
     - cargo test -p ckeletin --test update_mechanism
-    violation_evidence: .ckeletin/crate/tests/update_mechanism.rs exercises wholesale replacement
-      of .ckeletin/, tag pins, dry-run safety, and the compatibility check restoring the tree.
+    violation_evidence: .ckeletin/crate/tests/update_mechanism.rs::committed_local_file_stops_update
+      .ckeletin/crate/tests/update_mechanism.rs::discard_local_does_not_bypass_uncommitted_changes
+      .ckeletin/crate/tests/update_mechanism.rs::dry_run_prints_local_difference_and_changes_nothing
+      .ckeletin/crate/tests/update_mechanism.rs::compatibility_check_stops_on_local_difference_without_modifying
       .ckeletin/Justfile recipes ckeletin-update, ckeletin-update-dry-run, and ckeletin-update-check-compatibility
       are the command.
   CKSPEC-UPD-003:
     status: met
     evidence: just ckeletin-check-update json prints current, latest, and update_available.
-      just ckeletin-update prints CKELETIN_UPDATE_RESULT with status, from, to, and committed.
+      just ckeletin-update prints CKELETIN_UPDATE_RESULT with status, from, to, committed,
+      rolled_back, reason, and discarded. A stop uses status stopped, reason uncommitted or
+      local_difference or unknown_version, to null, committed false, and discarded false.
+      A success after discard sets discarded true.
     enforcement_level: test
     tests:
     - cargo test -p ckeletin --test framework_update_notice json_check
-    violation_evidence: .ckeletin/crate/tests/framework_update_notice.rs json_check_reports_current_latest_and_availability
-      parses those three fields. .ckeletin/Justfile emits CKELETIN_UPDATE_RESULT, and .ckeletin/crate/tests/update_mechanism.rs
-      asserts that object on the update command.
+    - cargo test -p ckeletin --test update_mechanism stops_update
+    violation_evidence: .ckeletin/crate/tests/framework_update_notice.rs::json_check_reports_current_latest_and_availability
+      parses current, latest, and update_available. .ckeletin/crate/tests/update_mechanism.rs::assert_stopped
+      parses the stop object. .ckeletin/Justfile emits CKELETIN_UPDATE_RESULT.
+  CKSPEC-UPD-004:
+    status: met
+    evidence: Config::load applies framework defaults, then optional [defaults] from the repo-root
+      ckeletin-project.toml embedded at compile time, then the config file, then environment
+      variables. CLI flags are applied after load and still win. An unknown key in [defaults]
+      fails load. Other tables in that file are ignored. The file lives outside .ckeletin/,
+      so a framework update leaves it in place.
+    enforcement_level: test
+    tests:
+    - cargo test -p ckeletin --lib project_default
+    - cargo test -p ckeletin --lib load_ignores_framework_option_defaults_table
+    violation_evidence: .ckeletin/crate/src/config.rs::project_default_log_level_applies_when_nothing_else_sets_it
+      .ckeletin/crate/src/config.rs::config_file_overrides_project_default .ckeletin/crate/src/config.rs::env_overrides_project_default
+      .ckeletin/crate/src/config.rs::unknown_project_default_key_fails_load .ckeletin/crate/src/config.rs::project_defaults_file_is_outside_framework_tree
+      .ckeletin/crate/src/project_config.rs::load_ignores_framework_option_defaults_table

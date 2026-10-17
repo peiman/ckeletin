@@ -86,6 +86,15 @@
       "status": "done",
       "decision": "update",
       "rationale": "RESOLVED 2026-10-16 in spec 0.12.0: CKSPEC-UPD-001 (notice on the ordinary gate when upstream framework version is a newer semver; non-fatal, off in CI, opt-out, offline-safe, upstream exempt), CKSPEC-UPD-002 (one command replaces only the framework, explicit ref, default branch, dry run, discarded compatibility check, version before and after; .ckeletin/VERSION is the version, a git tag is only a pin), CKSPEC-UPD-003 (machine-readable check and update result). Both implementations satisfy them: ckeletin-go framework 0.2.1 and ckeletin-rust framework 0.2.29. Held until both could meet the new MUSTs before the spec advanced (Principle 10)."
+    },
+    {
+      "id": "FB-010",
+      "reporter": "vaultmind",
+      "spec_rule": "CKSPEC-UPD-002",
+      "summary": "A derived project patched the framework tree and the update command replaced that tree and reported success without naming the patch. The version file still matched upstream, so the update notice stayed quiet. The project also had no place outside the framework tree to change a framework option's default, which is why the patch existed. ckeletin-go issues 154, 155, and the golangci-lint pin are implementation defects and are not part of this requirement. Issue 158 (an option with no per-invocation flag) waits until both scaffolds can do it.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "ACCEPTED 2026-10-17 for spec 0.13.0. CKSPEC-UPD-002 gains a stop: uncommitted framework changes and a committed local difference stop the command, which shows the difference and does not replace or commit. Discarding a committed difference takes an explicit request and does not discard uncommitted changes. The dry run shows a local difference and changes nothing. The compatibility check leaves a local difference in place. CKSPEC-UPD-003 records a stop or a discard and whether the replacement was kept. CKSPEC-UPD-004: a project default lives outside the framework tree, survives the update, outranks only the framework default, and an unknown option name fails at load. RESOLVED 2026-10-17 in spec 0.13.0. Both implementations meet it and the published reports are aggregated: ckeletin-go framework 0.2.3 and ckeletin-rust framework 0.2.30, 46/46 met (Principle 10)."
     }
   ]
 }

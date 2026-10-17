@@ -10,7 +10,10 @@ domain:
     A derived project keeps its own code and takes framework improvements
     from upstream. It must be told when a newer framework version exists,
     during the check it already runs, and it must have one command that
-    replaces only the framework.
+    replaces only the framework. That command must not discard a local
+    change to the framework tree without saying so. A project default for
+    a framework option lives outside the framework tree and survives the
+    replacement.
 
 requirements:
   - id: CKSPEC-UPD-001
@@ -52,6 +55,7 @@ requirements:
     title: One command updates only the framework
     level: MUST
     since: v0.12.0
+    modified: v0.13.0
     verification: automated
     description: >
       An implementation MUST provide one command that replaces the framework
@@ -62,23 +66,45 @@ requirements:
       MUST report the framework version before and after the replacement.
       The version a person is shown is the framework version. A git tag is
       only a pin to a ref, not a second version.
+
+      Before it replaces anything, the command MUST compare the project's
+      framework tree with the upstream framework tree at the framework
+      version the project currently records. The names the command itself
+      rewrites, so the tree belongs to the derived project, are not a local
+      difference. Any other difference is. Uncommitted changes in the
+      framework tree MUST stop the command. A committed local difference
+      MUST stop the command. In both cases the command MUST show the
+      difference and MUST NOT replace or commit the framework tree.
+
+      An explicit request to discard a committed local difference MAY
+      proceed with the replacement. That request MUST NOT discard
+      uncommitted changes. When it discards a committed difference, the
+      command MUST say that it did. The dry run MUST show a local
+      difference when one exists and MUST still change nothing. The
+      compatibility check MUST leave the project's framework tree as it
+      found it, including a local difference.
     rationale: >
       Single Source of Truth (Principle 7) — the framework version is the
       version of the framework tree. A tag names a commit; it does not
-      replace that version. Separation of Concerns (Principle 8) — the
-      framework tree and the application's code are different things, and
-      an update of one must not rewrite the other.
+      replace that version. A version file that matches upstream while the
+      tree does not is not that version. Separation of Concerns (Principle 8)
+      — the framework tree and the application's code are different things,
+      and an update of one must not rewrite the other. Truth-Seeking
+      (Principle 1) — a replacement that discards a local difference and
+      reports success has not told the truth about what it did.
     notes: >
       The dry run is read-only. The compatibility check may build or run
       the project's ordinary gate against the candidate, then restore the
-      previous framework tree even when that check fails. The version
-      before and after may be reported in prose, in a machine-readable
-      result, or in both.
+      previous framework tree even when that check fails. Restoration
+      includes a local difference. The version before and after may be
+      reported in prose, in a machine-readable result, or in both. A stop
+      reports that nothing was replaced.
 
   - id: CKSPEC-UPD-003
     title: Machine-readable update status
     level: SHOULD
     since: v0.12.0
+    modified: v0.13.0
     verification: automated
     description: >
       The update check SHOULD be machine-readable. When a comparison is
@@ -93,6 +119,37 @@ requirements:
     notes: >
       The check result names the current version, the latest version, and
       whether an update is available. The update result names the version
-      before, the version after, and whether the replacement was kept. An
+      before, the version after, and whether the replacement was kept. When
+      the command stops, or discards a local difference, the result says
+      which of those happened and whether the replacement was kept. An
       implementation may add fields. It does not omit those when it has a
-      comparison or a finished update.
+      comparison, a finished update, a stop, or a discard.
+
+  - id: CKSPEC-UPD-004
+    title: Project defaults survive a framework update
+    level: MUST
+    since: v0.13.0
+    verification: automated
+    description: >
+      A derived project MUST be able to replace the default of a framework
+      option from project-owned configuration. That configuration MUST live
+      outside the framework tree, and a framework update MUST leave it in
+      effect. The framework remains the source of which options exist and
+      of the framework's own default. When no invocation flag, environment
+      variable, or project config file sets the option, the value used MUST
+      be the project default when one is set, and the framework default
+      otherwise. A project default that names an option the framework does
+      not define MUST fail when configuration is loaded.
+    rationale: >
+      Separation of Concerns (Principle 8) — a default a project chooses is
+      project policy, and the framework tree is replaced on update.
+      Single Source of Truth (Principle 7) — the option still has one
+      definition. The project replaces the default; it does not fork the
+      option. Truth-Seeking (Principle 1) — an unknown option name is a
+      mistake, and ignoring it would hide the mistake.
+    notes: >
+      The project config file and the environment still outrank the project
+      default. The project default outranks only the framework default.
+      The mechanism is the implementation's. The requirement is the
+      outcome: the project can change a framework default without editing
+      the framework tree, and the next update does not remove that change.

@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.12.0",
+  "spec_version": "0.13.0",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -360,7 +360,8 @@
       "level": "MUST",
       "verification": "automated",
       "domain": "Framework Updates",
-      "since": "v0.12.0"
+      "since": "v0.12.0",
+      "modified": "v0.13.0"
     },
     {
       "id": "CKSPEC-UPD-003",
@@ -368,7 +369,16 @@
       "level": "SHOULD",
       "verification": "automated",
       "domain": "Framework Updates",
-      "since": "v0.12.0"
+      "since": "v0.12.0",
+      "modified": "v0.13.0"
+    },
+    {
+      "id": "CKSPEC-UPD-004",
+      "title": "Project defaults survive a framework update",
+      "level": "MUST",
+      "verification": "automated",
+      "domain": "Framework Updates",
+      "since": "v0.13.0"
     }
   ]
 }
