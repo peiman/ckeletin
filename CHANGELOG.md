@@ -159,7 +159,8 @@ Versioning: [Semantic Versioning](https://semver.org/)
 - Lean start: 3 core domains. More added when ckeletin-rust needs them.
 - No gate zero yet — deferred until second implementation exists.
 
-[Unreleased]: https://github.com/peiman/ckeletin/compare/8d06a2384850322906e03b5cc9d4bf81797bc499...HEAD
+[Unreleased]: https://github.com/peiman/ckeletin/compare/8937f375ad2f77371aba239e5690bbe901cf9d8e...HEAD
+[0.13.0]: https://github.com/peiman/ckeletin/compare/8d06a2384850322906e03b5cc9d4bf81797bc499...8937f375ad2f77371aba239e5690bbe901cf9d8e
 [0.12.0]: https://github.com/peiman/ckeletin/compare/b063c5fc65db5d18172c91881a9642bc349a3317...8d06a2384850322906e03b5cc9d4bf81797bc499
 [0.11.0]: https://github.com/peiman/ckeletin/compare/940a335f40005972b1120a5f144a35ab1926887d...b063c5fc65db5d18172c91881a9642bc349a3317
 [0.10.0]: https://github.com/peiman/ckeletin/compare/cf645df4f75e3f7778dcc23f982b9a0e64b55630...940a335f40005972b1120a5f144a35ab1926887d
