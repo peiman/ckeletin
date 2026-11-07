@@ -95,6 +95,24 @@
       "status": "done",
       "decision": "update",
       "rationale": "ACCEPTED 2026-10-17 for spec 0.13.0. CKSPEC-UPD-002 gains a stop: uncommitted framework changes and a committed local difference stop the command, which shows the difference and does not replace or commit. Discarding a committed difference takes an explicit request and does not discard uncommitted changes. The dry run shows a local difference and changes nothing. The compatibility check leaves a local difference in place. CKSPEC-UPD-003 records a stop or a discard and whether the replacement was kept. CKSPEC-UPD-004: a project default lives outside the framework tree, survives the update, outranks only the framework default, and an unknown option name fails at load. RESOLVED 2026-10-17 in spec 0.13.0. Both implementations meet it and the published reports are aggregated: ckeletin-go framework 0.2.3 and ckeletin-rust framework 0.2.30, 46/46 met (Principle 10)."
+    },
+    {
+      "id": "FB-011",
+      "reporter": "spec-self-review",
+      "spec_rule": "CKSPEC-ARCH-003",
+      "summary": "The MUST sentence named Cobra, Click, and clap. The schema says a description states what is required and not how a language does it. A reader can treat those three libraries as the definition of a CLI framework.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "ACCEPTED 2026-11-07 for spec 0.13.1. The names move to notes. The requirement stays: only the Command layer imports the CLI framework. Business Logic and Infrastructure do not. Entry may import Command and does not import the CLI framework. The obligation is unchanged, so both implementations still meet it. modified is set because the requirement text changed (Principle 7)."
+    },
+    {
+      "id": "FB-012",
+      "reporter": "spec-self-review",
+      "spec_rule": "CKSPEC-TEST-003",
+      "summary": "The SHOULD sentence named gomock, mockery, and unittest.mock. Same leak as FB-011: library names inside the requirement text.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "ACCEPTED 2026-11-07 for spec 0.13.1, with FB-011. The names move to notes. The requirement stays: tests inject dependencies through interfaces rather than using a mock generator. The obligation is unchanged."
     }
   ]
 }
