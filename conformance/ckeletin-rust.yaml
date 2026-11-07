@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.13.0
-report_date: '2026-10-17'
+spec_version: 0.13.1
+report_date: '2026-11-07'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -53,7 +53,8 @@ requirements:
     status: met
     evidence: A `catalog` command emits the cross-impl catalog schema via the OUT-002 envelope,
       derived from the clap command tree (Cli::command()). Schema types in the framework crate
-      (ckeletin::catalog, re-exported via infrastructure); clap walk in crates/cli/src/catalog.rs.
+      (ckeletin::catalog, re-exported via infrastructure). The clap walk lives in .ckeletin/catalog-clap
+      and crates/cli/src/catalog.rs calls it.
     enforcement_level: script
     tests:
     - cargo test -p cli --test cli catalog
@@ -81,7 +82,7 @@ requirements:
   CKSPEC-ARCH-001:
     status: met
     evidence: 'Cargo workspace members: crates/domain, crates/infrastructure, crates/cli,
-      plus framework crates .ckeletin/crate and .ckeletin/conform'
+      plus framework crates .ckeletin/crate, .ckeletin/conform, and .ckeletin/catalog-clap'
     enforcement_level: compile-time
     tests:
     - cargo check --workspace

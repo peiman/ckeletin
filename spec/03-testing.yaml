@@ -52,13 +52,13 @@ requirements:
     title: Dependency injection over mocking
     level: SHOULD
     since: v0.1.0
+    modified: v0.13.1
     verification: partial
     description: >
       Tests SHOULD inject dependencies through interfaces rather than
-      using mock generation frameworks (e.g., gomock, mockery,
-      unittest.mock). Test doubles SHOULD be simple structs or
-      functions that implement the required interface. External
-      dependencies SHOULD be abstracted behind interfaces in
+      using mock generation frameworks. Test doubles SHOULD be simple
+      structs or functions that implement the required interface.
+      External dependencies SHOULD be abstracted behind interfaces in
       production code, making them naturally replaceable in tests
       without framework magic.
     rationale: >
@@ -69,6 +69,9 @@ requirements:
       complexity and obscure test intent. Interface-based injection
       makes the dependency graph visible, satisfying Truth-Seeking
       (Principle 1).
+    notes: >
+      Mock generation frameworks include, for example, gomock, mockery,
+      and unittest.mock.
 
   - id: CKSPEC-TEST-004
     title: Atomic test commits

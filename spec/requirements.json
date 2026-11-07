@@ -1,5 +1,5 @@
 {
-  "spec_version": "0.13.0",
+  "spec_version": "0.13.1",
   "requirements": [
     {
       "id": "CKSPEC-AGENT-001",
@@ -80,7 +80,8 @@
       "level": "MUST",
       "verification": "automated",
       "domain": "Architecture",
-      "since": "v0.1.0"
+      "since": "v0.1.0",
+      "modified": "v0.13.1"
     },
     {
       "id": "CKSPEC-ARCH-004",
@@ -336,7 +337,8 @@
       "level": "SHOULD",
       "verification": "partial",
       "domain": "Testing",
-      "since": "v0.1.0"
+      "since": "v0.1.0",
+      "modified": "v0.13.1"
     },
     {
       "id": "CKSPEC-TEST-004",

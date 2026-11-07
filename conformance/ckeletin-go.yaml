@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-go
-spec_version: 0.13.0
-report_date: '2026-10-17'
+spec_version: 0.13.1
+report_date: '2026-11-07'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -278,9 +278,11 @@ requirements:
     violation_evidence: If the ADR-014 audit table is removed, the grep check fails.
   CKSPEC-ENF-005:
     status: met
-    evidence: task conform validates all 45 requirement IDs are present in conformance-mapping.yaml
+    evidence: task conform validates every requirement ID is present in conformance-mapping.yaml
       before running checks. Missing IDs cause the generator to fail with a non-zero exit
-      code. The count is machine-verified by the ENF-008 drift guard, not hand-maintained.
+      code. The mapped count is computed from the mapping and is not restated here, so this
+      sentence cannot go stale. The ENF-008 drift guard rejects a handwritten count even when
+      the number matches.
     enforcement_level: script
     tests:
     - test -f conformance-mapping.yaml
@@ -326,13 +328,16 @@ requirements:
       can never pass as proof. The resolution logic is extracted to .ckeletin/scripts/lib/anchor.sh
       (anchor_resolve) and unit-tested across all branches by the violation_test below. Met
       requirements are tallied as machine-anchored vs analysis-with-evidence and the split
-      is printed. The same gate also catches prose count drift ("all N requirement").'
+      is printed. The same gate rejects a handwritten requirement count in evidence, including
+      one that matches the mapped total.'
     enforcement_level: script
     tests:
     - grep -q 'machine-anchored' .ckeletin/scripts/conform.sh
     - grep -q 'met but unanchored' .ckeletin/scripts/conform.sh
     - grep -q 'dangling anchor' .ckeletin/scripts/lib/anchor.sh
     - grep -q 'anchor_resolve' .ckeletin/scripts/conform.sh
+    - grep -q 'evidence_count_drift' .ckeletin/scripts/conform.sh
+    - grep -q 'evidence_count_drift' .ckeletin/scripts/lib/evidence-drift.sh
     violation_tests:
     - test/conformance/violation_test.go::TestViolation_ENF008_AnchorResolution
     violation_evidence: 'The presence/tally half: stripping a met requirement''s checks and

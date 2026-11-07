@@ -7,6 +7,15 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-11-07
+
+### Changed
+
+- CKSPEC-ARCH-003: the requirement no longer names Cobra, Click, or clap. Only the Command layer imports the CLI framework. Those libraries are examples in the notes.
+- CKSPEC-TEST-003: the requirement no longer names gomock, mockery, or unittest.mock. Tests inject dependencies rather than using a mock generator. Those libraries are examples in the notes.
+
+The obligation of each requirement is unchanged.
+
 ## [0.13.0] - 2026-10-17
 
 ### Added
