@@ -168,7 +168,8 @@ The obligation of each requirement is unchanged.
 - Lean start: 3 core domains. More added when ckeletin-rust needs them.
 - No gate zero yet — deferred until second implementation exists.
 
-[Unreleased]: https://github.com/peiman/ckeletin/compare/8937f375ad2f77371aba239e5690bbe901cf9d8e...HEAD
+[Unreleased]: https://github.com/peiman/ckeletin/compare/82df0eff2f74dccb460192d9d46a05f467ef0df1...HEAD
+[0.13.1]: https://github.com/peiman/ckeletin/compare/8937f375ad2f77371aba239e5690bbe901cf9d8e...82df0eff2f74dccb460192d9d46a05f467ef0df1
 [0.13.0]: https://github.com/peiman/ckeletin/compare/8d06a2384850322906e03b5cc9d4bf81797bc499...8937f375ad2f77371aba239e5690bbe901cf9d8e
 [0.12.0]: https://github.com/peiman/ckeletin/compare/b063c5fc65db5d18172c91881a9642bc349a3317...8d06a2384850322906e03b5cc9d4bf81797bc499
 [0.11.0]: https://github.com/peiman/ckeletin/compare/940a335f40005972b1120a5f144a35ab1926887d...b063c5fc65db5d18172c91881a9642bc349a3317
