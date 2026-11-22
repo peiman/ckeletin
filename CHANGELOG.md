@@ -7,6 +7,13 @@ Versioning: [Semantic Versioning](https://semver.org/)
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-22
+
+### Changed
+
+- CKSPEC-OUT-003: the command identifier is the full command path without the program name, unique per command within one CLI. A nested command is `check model`. A failure before the command resolves may leave `command` null or use the deepest path that resolved.
+- CKSPEC-OUT-002: in machine-readable mode the envelope status and the process exit code agree. Success exits 0. An error exits with the non-zero code the command chose. A CLI should document what its exit codes mean.
+
 ## [0.13.1] - 2026-11-07
 
 ### Changed
@@ -169,6 +176,7 @@ The obligation of each requirement is unchanged.
 - No gate zero yet — deferred until second implementation exists.
 
 [Unreleased]: https://github.com/peiman/ckeletin/compare/82df0eff2f74dccb460192d9d46a05f467ef0df1...HEAD
+[0.14.0]: https://github.com/peiman/ckeletin/compare/82df0eff2f74dccb460192d9d46a05f467ef0df1...HEAD
 [0.13.1]: https://github.com/peiman/ckeletin/compare/8937f375ad2f77371aba239e5690bbe901cf9d8e...82df0eff2f74dccb460192d9d46a05f467ef0df1
 [0.13.0]: https://github.com/peiman/ckeletin/compare/8d06a2384850322906e03b5cc9d4bf81797bc499...8937f375ad2f77371aba239e5690bbe901cf9d8e
 [0.12.0]: https://github.com/peiman/ckeletin/compare/b063c5fc65db5d18172c91881a9642bc349a3317...8d06a2384850322906e03b5cc9d4bf81797bc499

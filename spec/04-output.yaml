@@ -34,14 +34,18 @@ requirements:
     title: Machine-readable output mode
     level: MUST
     since: v0.2.0
-    modified: v0.11.0
+    modified: v0.14.0
     verification: automated
     description: >
       Every command MUST support a machine-readable output mode
       activated via flag or configuration. When active, stdout MUST
       emit structured data (JSON or equivalent) instead of formatted
       text. The status stream (stderr) SHOULD be silenced in machine
-      mode to produce clean parseable output.
+      mode to produce clean parseable output. In machine-readable mode
+      the envelope status and the process exit code MUST agree:
+      `success` exits 0 and `error` exits non-zero. A command MUST be
+      able to choose that non-zero code, and the implementation MUST
+      exit with the code the command chose.
     rationale: >
       Lean Iteration (Principle 4) — the CLI is the API. Agents,
       scripts, and CI pipelines need parseable responses without
@@ -76,6 +80,10 @@ requirements:
       text`) and fixed it with a single resolver. Both reference
       implementations resolve flag-over-config today.
 
+      Exit codes (FB-014): the agreement above is the obligation. A CLI
+      SHOULD document the meaning of each exit code it uses, so an agent
+      can branch on the process status as well as on `error.code`.
+
       Exemptions (#25): a command MAY be exempt from this requirement when
       (a) its sole output is an artifact consumed directly by another program
       in a format that program dictates — a shell completion script
@@ -90,12 +98,18 @@ requirements:
     title: Standardized output envelope
     level: SHOULD
     since: v0.2.0
-    modified: v0.11.0
+    modified: v0.14.0
     verification: automated
     description: >
       Machine-readable output SHOULD use a standardized envelope
       with at minimum: status (success or error), command identifier,
-      data payload, and error details. Commands MAY customize the data
+      data payload, and error details. The command identifier MUST be
+      unique per command within one CLI. It is the full command path
+      without the program name, words joined by a single space. A nested
+      command is `check model`. A top-level command is its name alone,
+      such as `version`. An implementation MAY also offer a stable
+      alias. The identifier a consumer reads by default MUST be this
+      path. Commands MAY customize the data
       payload shape but the envelope structure SHOULD be consistent
       across all commands. The envelope is a TOTAL schema: when used,
       every key MUST be present in every envelope, and an absent value
@@ -132,6 +146,11 @@ requirements:
       of OUT-003 (an agent parsing any ckeletin CLI the same way) and so
       violate Platforms, Not Features (Principle 5) and Single Source of
       Truth (Principle 7) across implementations.
+
+      Command identifier (FB-013): the path omits the program name so two
+      CLIs can use the same words. A failure before the command resolves
+      (the parser boundary in OUT-002) MAY set `command` to JSON `null`,
+      or to the deepest path that did resolve.
 
       Error-object shape (#40, v0.11.0): the error field, when populated,
       SHOULD be a structured object `{ code, message }` — `message`
