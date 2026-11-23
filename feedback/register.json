@@ -113,6 +113,26 @@
       "status": "done",
       "decision": "update",
       "rationale": "ACCEPTED 2026-11-07 for spec 0.13.1, with FB-011. The names move to notes. The requirement stays: tests inject dependencies through interfaces rather than using a mock generator. The obligation is unchanged."
+    },
+    {
+      "id": "FB-013",
+      "issue": 52,
+      "reporter": "daana-cli",
+      "spec_rule": "CKSPEC-OUT-003",
+      "summary": "OUT-003 required a command identifier and did not say what it is. A leaf name is shared by different nested commands, so an agent cannot tell them apart.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "ACCEPTED 2026-11-22 for spec 0.14.0. The identifier is the full command path without the program name, words joined by a single space, and it MUST be unique per command within one CLI. A nested command is check model. A top-level command is its name alone. A failure before the command resolves MAY set command to null or to the deepest path that resolved. Principle 5: one path is the platform. Principle 7: the description states the obligation and does not name a library. DONE 2026-11-23: ckeletin-go and ckeletin-rust both publish a 0.14.0 report with all 46 requirements met."
+    },
+    {
+      "id": "FB-014",
+      "issue": 53,
+      "reporter": "daana-cli",
+      "spec_rule": "CKSPEC-OUT-002",
+      "summary": "The spec defined the error object and did not say how the process exit code relates to the envelope. A rendered error could not carry the code the command chose.",
+      "status": "done",
+      "decision": "update",
+      "rationale": "ACCEPTED 2026-11-22 for spec 0.14.0, with FB-013. In machine-readable mode, success exits 0 and error exits non-zero, and the implementation exits with the non-zero code the command chose. A CLI SHOULD document what its exit codes mean. Principle 1: status and the process exit tell the same truth. DONE 2026-11-23: ckeletin-go and ckeletin-rust both publish a 0.14.0 report with all 46 requirements met."
     }
   ]
 }
