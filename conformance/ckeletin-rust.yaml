@@ -6,8 +6,8 @@
 # 'task generate:conformance' to refresh.
 
 implementation: ckeletin-rust
-spec_version: 0.13.1
-report_date: '2026-11-07'
+spec_version: 0.14.0
+report_date: '2026-11-23'
 requirements:
   CKSPEC-AGENT-001:
     status: met
@@ -334,31 +334,43 @@ requirements:
       check`).
   CKSPEC-OUT-002:
     status: met
-    evidence: --output json flag. Integration tests verify the JSON envelope on stdout with
-      clean stderr.
+    evidence: --output json flag. In machine-readable mode a success envelope exits 0 and
+      an error envelope exits non-zero. A command chooses that code with output::ExitError;
+      crates/cli/src/main.rs::failure_code returns output::exit_code_of instead of always
+      1. A chosen 0 becomes 1. clap --help and --version exit 0, and a usage error exits 2
+      as plain text before run (the OUT-002 pre-resolution exemption). Integration tests verify
+      the JSON envelope on stdout with clean stderr, the exit agreement, and the clap exemption.
     enforcement_level: script
     tests:
     - cargo test -p cli --test cli
-    violation_evidence: crates/cli/tests/cli.rs ping_json_mode_* and json_mode_error_* tests
-      assert the JSON envelope on stdout and empty stderr; a regression fails them in CI (`just
-      check`).
+    - cargo test -p ckeletin --lib exit_code_of
+    - cargo test -p cli --bin ckeletin-rust failure_code
+    violation_evidence: crates/cli/tests/cli.rs ping_json_mode_has_success_status, json_mode_bad_config_produces_json_error_on_stdout,
+      help_exits_zero_as_plain_text, version_flag_exits_zero_as_plain_text, and usage_error_exits_two_as_plain_text
+      assert the exit agreement and the clap exemption. .ckeletin/crate/src/output.rs::exit_code_of
+      and crates/cli/src/main.rs::failure_code assert a chosen code is the process code. A
+      regression fails them in CI (`just check`).
   CKSPEC-OUT-003:
     status: met
     evidence: 'Envelope struct emits all four keys (status, command, data, error) as a TOTAL
       schema (OUT-003): no skip_serializing_if, so an absent value (data on error, error on
-      success) serializes as JSON null, never omitted. Error-object shape (OUT-003 v0.11.0,
-      #40): the error field is a structured EnvelopeError { code, message } — code always
-      present (null, as rust has no stable error codes yet), message human-readable; not a
-      bare string. Unit tests assert present-and-null for data/error and the {code, message}
-      error object.'
+      success) serializes as JSON null, never omitted. The command identifier is the full
+      path without the program name (.ckeletin/crate/src/output.rs::command_id): words joined
+      by one space. A top-level command is its name alone. This CLI is flat, so ping, version,
+      and catalog stay those names. Error-object shape (OUT-003 v0.11.0, #40): the error field
+      is a structured EnvelopeError { code, message } — code always present (null, as rust
+      has no stable error codes yet), message human-readable; not a bare string. Unit tests
+      assert present-and-null for data/error and the {code, message} error object.'
     enforcement_level: script
     tests:
     - cargo test -p ckeletin --lib output
     violation_evidence: .ckeletin/crate/src/output.rs envelope_* unit tests assert the {status,
       command, data, error} total envelope shape (every key present; absent value is JSON
-      null) AND the structured error object {code, message}; crates/cli/tests/cli.rs asserts
-      the live error envelope carries error.message + null error.code; a regression fails
-      them in CI (`just check`).
+      null) AND the structured error object {code, message}. .ckeletin/crate/src/output.rs::command_id
+      is the path without the program name; crates/cli/src/main.rs::command_id covers the
+      flat names. crates/cli/tests/cli.rs asserts the live error envelope carries error.message
+      + null error.code and command ping, version, or catalog. A regression fails them in
+      CI (`just check`).
   CKSPEC-OUT-004:
     status: met
     evidence: Output::success/message/error shadow-log the rendered data (not just the command
